@@ -35,21 +35,55 @@ class TopFrame(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.tables_list = self.get_tables_list()
-        self.list_box = tk.Listbox(self)
-        self.tables_list = sorted([table[0] for table in self.tables_list])
-        for index, table in enumerate(self.tables_list):
-            self.list_box.insert(index, table)
-            print(index, table)
-        tk.Label(self, text='List of all database tables').pack(side=tk.TOP)
-        self.list_box.pack(anchor=tk.CENTER)
 
+        # initializing ListBox and putting values into it
+        self.tables_list = self.get_tables_list()
+        # self.list_box = tk.Listbox(self)
+        # self.tables_list = sorted([table[0] for table in self.tables_list])
+        # for index, table in enumerate(self.tables_list):
+        #     self.list_box.insert(index, table)
+        tk.Label(self, text='List of all database tables').pack(side=tk.TOP)
+        # self.list_box.pack(anchor=tk.W)
+
+        # creating hierarchical treeview
+        self.tv_hier = ttk.Treeview(self.parent, height=3, show='tree')
+        self.tv_hier.place(x=150, y=20, height = 150)
+        self.insert_tv()
+
+        # creating buttons
         self.ml_window_button = tk.Button(self, text='Open ML window', command=self.open_ml).pack(side=tk.BOTTOM)
         self.table_open_button = tk.Button(self, text='Open a TreeView in the new window',
                                            command=self.open_table).pack(side=tk.BOTTOM)
 
+    def insert_tv(self):
+        conn = sqlite3.connect('main.sqlite3')
+        cur = conn.cursor()
+        try:
+            n = 0
+            tables_list = cur.execute('SELECT name FROM sqlite_master WHERE type = "table";').fetchall()
+            if len(tables_list) >= 4:
+                tables_list = tables_list[1:]
+            for table in tables_list:
+                self.tv_hier.insert('', '0', 'item{}'.format(n), text=table, tags='table')
+                names = cur.execute('SELECT name FROM {}'.format(table[0])).fetchall()
+                for name in names:
+                    self.tv_hier.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
+                n += 1
+        finally:
+            cur.close()
+            conn.close()
+
     def open_table(self):
-        new_window = TableView(tk.Toplevel(self), geometry='500x500')
+        print(self.tv_hier.item(self.tv_hier.selection()))
+        table = self.tv_hier.item(self.tv_hier.selection())
+        if table['text'] == '':
+            print('No table selected. Please, select the table to continue.')
+            return
+        elif table['tags'][0] == 'table':
+            print('Please, select data file, not DB table.')
+            return
+        else:
+            TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'], table=table['tags'])
 
     def open_ml(self):
         if self.list_box.get(tk.ANCHOR) == '':
@@ -60,12 +94,13 @@ class TopFrame(tk.Frame):
 
     def get_tables_list(self):
         conn = sqlite3.connect('main.sqlite3')
-        curs = conn.cursor()
+        cur = conn.cursor()
         try:
-            tables_list = curs.execute('SELECT name FROM sqlite_master WHERE type = "table";').fetchall()
+            tables_list = cur.execute('SELECT name FROM sqlite_master WHERE type = "table";').fetchall()
             # print(tables_list)
             return tables_list
         finally:
+            cur.close()
             conn.close()
 
 
@@ -80,8 +115,8 @@ class BottomFrame(tk.Frame):
         tk.Label(self, textvariable=self.file_path_info).pack(side=tk.TOP)
         self.file_open_button = tk.Button(self, text='File Upload',
                                           command=self.open_file).pack(anchor=tk.SE, expand=True)
-        self.db_create_button = tk.Button(self, text='Create DB from File',
-                                          command=self.create_table).pack(anchor=tk.SE)
+        self.db_create_button = tk.Button(self, text='Add table to Tasks',
+                                          command=self.input_table).pack(anchor=tk.SE)
         self.db_create_info = tk.StringVar()
         self.db_create_info.set('Please, enter table name:')
         tk.Label(self, textvariable=self.db_create_info).pack(anchor=tk.CENTER)
@@ -92,59 +127,97 @@ class BottomFrame(tk.Frame):
         self.file_path = askopenfile(mode='r').name
         self.file_path_info.set('File path: ' + self.file_path)
 
-    def create_table(self):
+    def input_table(self):
         conn = sqlite3.connect('main.sqlite3')
+        cur = conn.cursor()
         try:
             name = self.table_name.get()
-            if name is None:
+            if name == '':
                 raise ValueError
             else:
-                pd.read_csv(str(self.file_path)).to_sql(name, conn, if_exists='replace')
-                self.db_create_info.set('Table created successfully')
-                App.update_list(self)
+                file = serialize(pd.read_csv(str(self.file_path)))
+                cur.execute('INSERT INTO Tasks (name, table_file) VALUES (?, ?)', (name, file))
+                conn.commit()
         except ValueError:
             self.db_create_info.set('Enter table name first!')
         except FileNotFoundError:
             self.db_create_info.set('Upload the file first!')
         finally:
+            cur.close()
             conn.close()
+
+    # def create_table(self):
+    #     conn = sqlite3.connect('main.sqlite3')
+    #     try:
+    #         name = self.table_name.get()
+    #         if name is None:
+    #             raise ValueError
+    #         else:
+    #             pd.read_csv(str(self.file_path)).to_sql(name, conn, if_exists='replace')
+    #             self.db_create_info.set('Table created successfully')
+    #             App.update_list(self)
+    #     except ValueError:
+    #         self.db_create_info.set('Enter table name first!')
+    #     except FileNotFoundError:
+    #         self.db_create_info.set('Upload the file first!')
+    #     finally:
+    #         conn.close()
 
 
 class TableView:
-    def __init__(self, master, geometry, *args, **kwargs):
+    def __init__(self, master, geometry, table, data,*args, **kwargs):
         self.master = master
         self.master.geometry(geometry)
-        tk.Label(self.master, text="I'm in TableView Frame now!").pack(side=tk.TOP)
-        self.get_cols_button = tk.Button(self.master, text='Get columns from mall',
-                                         command=self.show_table).pack(side=tk.TOP)
+        self.table = table[0]
+        self.data = data
+        tk.Label(self.master, text="{} table".format(self.table)).pack(side=tk.TOP)
         self.conn = sqlite3.connect('main.sqlite3')
         self.cur = self.conn.cursor()
-        self.cols = self.get_cols()
-        self.tv = ttk.Treeview(self.master, columns=self.cols, show='headings')
-        self.configuration_tv()
+        self.tv = ttk.Treeview(self.master, show='headings')
+        self.show_table()
+
+
+        # self.configuration_tv()
+        # self.cols = self.get_cols()
 
     def show_table(self):
-        self.cur.execute('SELECT * FROM mall')
-        rows = self.cur.fetchall()
+        # creating DB cursor and configuring table environment
+        data = deserialize(self.cur.execute(f'SELECT table_file FROM {self.table} '
+                                            f'WHERE name = "{self.data}"').fetchall()[0][0])
+        self.tv['columns'] = list(data.columns)
+        for column in self.tv['columns']:
+            self.tv.heading(column, text=column)
+            self.tv.column(column, width=60)
+        rows= data.to_numpy().tolist()
+        i = 0
         for row in rows:
-            self.tv.insert('', tk.END, values=row)
-        self.tv.pack(expand=True, fill=tk.BOTH)
+            if i % 2 == 0:
+                self.tv.insert('', tk.END, values=row, tag='even')
+            else:
+                self.tv.insert('', tk.END, values=row, tag='odd')
+            i += 1
+        self.tv.tag_configure('even', background='#E8E8E8')
+        self.tv.tag_configure('odd', background='#DFDFDF')
+        self.tv.place(relheight=1, relwidth=1)  # expand=True, fill=tk.BOTH)
         ysb = ttk.Scrollbar(self.master, orient=tk.VERTICAL, command=self.tv.yview)
-        self.tv.configure(yscroll=ysb.set)
+        xsb = ttk.Scrollbar(self.master, orient=tk.HORIZONTAL, command=self.tv.xview)
+        self.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
         ysb.pack(side=tk.RIGHT, fill=tk.Y)
+        xsb.pack(side=tk.BOTTOM, fill=tk.X)
 
-    def get_cols(self):
-        self.cur.execute('SELECT * FROM mall WHERE 1=0')
-        return [d[0] for d in self.cur.description]
-
-    def configuration_tv(self):
-        # configuring headings
-        n, m = 1, 0
-        for col in self.cols:
-            self.tv.heading('#{}'.format(n), text=col)
-            self.tv.column(m, width=80)
-            n += 1
-            m += 1
+    # def get_cols(self):
+    #     # getting columns from table
+    #     self.cur.execute('SELECT * FROM {} WHERE 1=0'.format(self.table))
+    #     return [d[0] for d in self.cur.description]
+    #
+    # def configuration_tv(self):
+    #     # configuring headings
+    #     n, m = 1, 0
+    #     for col in self.cols:
+    #         self.tv.heading('#{}'.format(n), text=col)
+    #         self.tv.column(m, width=80)
+    #         n += 1
+    #         m += 1
 
         # configuring scrollbar
 
@@ -161,7 +234,7 @@ class MLView(tk.Tk):
         self.X_test = ''
         self.y_test = ''
         self.to_db_button = ''
-        self.predict_button = tk.Button(self, text='Predict class from X_test', command=self.prediction).\
+        self.predict_button = tk.Button(self, text='Predict class from X_test', command=self.prediction). \
             pack()
 
     def get_pandas(self):
@@ -200,6 +273,12 @@ class MLView(tk.Tk):
         conn.close()
 
 
+def serialize(file):
+    return pickle.dumps(file)
+
+
+def deserialize(file):
+    return pickle.loads(file)
 
 
 if __name__ == '__main__':

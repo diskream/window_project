@@ -1,0 +1,25 @@
+CREATE table Tasks (
+    task_id int primary key,
+    name text(25),
+    table_file varbinary
+);
+CREATE TABLE Task_variant (
+    task_id int,
+    variant_id int,
+    name text(25),
+    table_file varbinary,
+    foreign key (task_id) references Tasks(task_id),
+    primary key (task_id, variant_id)
+);
+DROP TABLE models;
+CREATE TABLE Models (
+    model_id integer,
+    variant_id int,
+    task_id int,
+    name text(25),
+    model_code int null,
+    accuracy float null,
+    foreign key (variant_id) references Task_variant(variant_id),
+    foreign key (task_id) references Tasks(task_id),
+    primary key (model_id, variant_id, task_id)
+)
