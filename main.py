@@ -20,7 +20,7 @@ class App(tk.Tk):
         self.table_list_frame.place(x=0, y=0, anchor='nw', width=500, height=250)
 
         self.file_upload_frame = BottomFrame(self)
-        self.file_upload_frame.place(x=0, y=250, anchor='nw', width=500, height=250)
+        self.file_upload_frame.place(x=10, y=255, anchor='nw', width=480, height=235)
 
         # self.table_list_frame.pack(anchor=tk.NW)
         # self.to_tree_frame = TopRightFrame(self, text='Open a table')
@@ -37,17 +37,18 @@ class TopFrame(tk.Frame):
         self.parent = parent
 
         # initializing ListBox and putting values into it
-        self.tables_list = self.get_tables_list()
+        # self.tables_list = self.get_tables_list()
         # self.list_box = tk.Listbox(self)
         # self.tables_list = sorted([table[0] for table in self.tables_list])
         # for index, table in enumerate(self.tables_list):
         #     self.list_box.insert(index, table)
-        tk.Label(self, text='List of all database tables').pack(side=tk.TOP)
         # self.list_box.pack(anchor=tk.W)
+
+        tk.Label(self, text='List of all database tables').pack(side=tk.TOP)
 
         # creating hierarchical treeview
         self.tv_hier = ttk.Treeview(self.parent, height=3, show='tree')
-        self.tv_hier.place(x=150, y=20, height = 150)
+        self.tv_hier.place(x=150, y=20, height=150)
         self.insert_tv()
 
         # creating buttons
@@ -86,12 +87,17 @@ class TopFrame(tk.Frame):
             TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'], table=table['tags'])
 
     def open_ml(self):
-        if self.list_box.get(tk.ANCHOR) == '':
-            pass
+        table = self.tv_hier.item(self.tv_hier.selection())
+        if table['text'] == '':
+            print('No table selected. Please, select the table to continue.')
+            return
+        elif table['tags'][0] == 'table':
+            print('Please, select data file, not DB table.')
+            return
         else:
-            print(self.list_box.get(tk.ANCHOR), '123')
-            MLView(table=self.list_box.get(tk.ANCHOR))
+            MLView(data=table['text'], table=table['tags'])
 
+    @staticmethod
     def get_tables_list(self):
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
@@ -104,11 +110,10 @@ class TopFrame(tk.Frame):
             conn.close()
 
 
-class BottomFrame(tk.Frame):
+class BottomFrame(tk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
+        tk.LabelFrame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-
         self.file_path_info = tk.StringVar()
         self.file_path_info.set('File path will be there')
         self.file_path = ''
@@ -165,7 +170,7 @@ class BottomFrame(tk.Frame):
 
 
 class TableView:
-    def __init__(self, master, geometry, table, data,*args, **kwargs):
+    def __init__(self, master, geometry, table, data, *args, **kwargs):
         self.master = master
         self.master.geometry(geometry)
         self.table = table[0]
@@ -175,7 +180,6 @@ class TableView:
         self.cur = self.conn.cursor()
         self.tv = ttk.Treeview(self.master, show='headings')
         self.show_table()
-
 
         # self.configuration_tv()
         # self.cols = self.get_cols()
@@ -188,7 +192,7 @@ class TableView:
         for column in self.tv['columns']:
             self.tv.heading(column, text=column)
             self.tv.column(column, width=60)
-        rows= data.to_numpy().tolist()
+        rows = data.to_numpy().tolist()
         i = 0
         for row in rows:
             if i % 2 == 0:
@@ -219,58 +223,135 @@ class TableView:
     #         n += 1
     #         m += 1
 
-        # configuring scrollbar
+    # configuring scrollbar
 
 
 class MLView(tk.Tk):
-    def __init__(self, table, *args, **kwargs):
+    def __init__(self, table, data, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry('500x500')
-        self.table = table
-        self.data = ''
-        tk.Label(self, text='Chosen table: ' + self.table).pack()
-        self.get_pandas_button = tk.Button(self, text='Get data from database', command=self.get_pandas).pack()
-        self.train_button = tk.Button(self, text='Fit model', command=self.fit_model)
-        self.X_test = ''
-        self.y_test = ''
-        self.to_db_button = ''
-        self.predict_button = tk.Button(self, text='Predict class from X_test', command=self.prediction). \
-            pack()
+        self.geometry('500x530')
+        self.resizable(width=False, height=False)
+        self.table = table[0]
+        self.data = data
+        self.dataframe = self.get_data()
+        self.clf = 'classifier pattern'
+        tk.Label(self, text='Data: ' + self.data + '\nfrom ' + self.table + ' table.').grid(row=0, column=1)
+        tk.Label(self, text='Please, choose ML algorithm:').grid(row=1, column=0)
 
-    def get_pandas(self):
-        conn = sqlite3.connect('main.sqlite3')
-        query = 'SELECT * FROM {}'.format(self.table)
-        self.data = pd.read_sql(query, conn, index_col='index')
-        print(type(self.data))
-        tk.Label(self, text=self.data.head(5)).pack()
-        self.train_button.pack()
+        # configuring combobox
+        self.alg_box = ttk.Combobox(self, values=[
+            'Decision Tree',
+            'Random Forest',
+            'k Nearest Neighbors'
+        ], width=15)
+        self.alg_box.grid(row=2, column=0)
+        self.alg_box.current(0)
+        self.update_title()
+        self.alg_box_button = tk.Button(self, text='Enter', command=self.alg_configuration
+                                        ).grid(row=2, column=1,sticky=tk.W)
 
-    def fit_model(self):
-        data = self.data
-        data = data.rename(columns={'Annual Income (k$)': 'income', 'Spending Score (1-100)': 'spending_score'})
-        data['Gender'] = data['Gender'].replace({'Male': 0, 'Female': 1})
-        X = data.drop('spending_score', axis=1)
-        y = data.spending_score
-        X_train, self.X_test, y_train, self.y_test = train_test_split(X, y, test_size=0.25)
-        clf = DecisionTreeClassifier(criterion='entropy').fit(X_train, y_train)
-        tk.Label(self, text='Model score: ' + str(clf.score(self.X_test, self.y_test))).pack()
-        model = pickle.dumps(clf)
+    def update_title(self):
+        self.title('Working on {} model'.format(self.alg_box.get()))
+
+    def alg_configuration(self):
+        alg = self.alg_box.get()
+        self.update_title()
+        param_frame = tk.LabelFrame(self, text='{} configuration'.format(alg), width=450)
+        param_frame.place(height=255, width=450, x=25, y=100)
+        clf_frame = tk.LabelFrame(self, text='{} fit and score'.format(alg))
+        clf_frame.place(x=25, y=360, width=450, height=150)
+
+        def get_tree_params(outer_self, frame):
+            params['criterion'] = criterion.get()
+            params['max_depth'] = int(max_depth.get())
+            params['min_samples_split'] = int(min_samples_split.get())
+            params['min_samples_leaf'] = int(min_samples_leaf.get())
+            params['min_weight_fraction_leaf'] = float(min_weight_fraction_leaf.get())
+            params['random_state'] = random_state.get()
+            if params['random_state'] == 'None':
+                params['random_state'] = None
+
+            params_list = ''
+            for key, value in params.items():
+                if key != 'random_state':
+                    params_list += str(key) + ': ' + str(value) + '\n'
+                else:
+                    params_list += str(key) + ': ' + str(value)
+            tk.Label(param_frame, text=params_list, justify=tk.LEFT).grid(row=11, column=0, columnspan=2, sticky=tk.W)
+            return outer_self.get_clf(params, frame)
+
+        tk.Button(param_frame, text='Get params', command=lambda: get_tree_params(self, clf_frame), width=14).grid(
+            row=10, column=1)
+        params = {}
+        default_params = {
+            'criterion': tk.StringVar(param_frame, value='entropy'),
+            'max_depth': tk.StringVar(param_frame, value=15),
+            'min_samples_split': tk.StringVar(param_frame, value=2),
+            'min_samples_leaf': tk.StringVar(param_frame, value=1),
+            'min_weight_fraction_leaf': tk.StringVar(param_frame, value=0.0),
+            'random_state': tk.StringVar(param_frame, value='None')
+        }
+        if alg == 'Decision Tree':
+            tk.Label(param_frame, text='criterion').grid(row=0, column=0)
+            criterion = tk.Entry(param_frame, width=14, textvariable=default_params['criterion'])
+            criterion.grid(row=1, column=0)
+
+            tk.Label(param_frame, text='max_depth').grid(row=0, column=1)
+            max_depth = tk.Entry(param_frame, width=14, textvariable=default_params['max_depth'])
+            max_depth.grid(row=1, column=1)
+
+            tk.Label(param_frame, text='min_samples_split').grid(row=0, column=2)
+            min_samples_split = tk.Entry(param_frame, width=14, textvariable=default_params['min_samples_split'])
+            min_samples_split.grid(row=1, column=2)
+
+            tk.Label(param_frame, text='min_samples_leaf').grid(row=2, column=0)
+            min_samples_leaf = tk.Entry(param_frame, width=14, textvariable=default_params['min_samples_leaf'])
+            min_samples_leaf.grid(row=3, column=0)
+
+            tk.Label(param_frame, text='min_weight_fraction_leaf').grid(row=2, column=1)
+            min_weight_fraction_leaf = tk.Entry(param_frame, width=14,
+                                                textvariable=default_params['min_weight_fraction_leaf'])
+            min_weight_fraction_leaf.grid(row=3, column=1)
+
+            tk.Label(param_frame, text='random_state').grid(row=2, column=2)
+            random_state = tk.Entry(param_frame, width=14, textvariable=default_params['random_state'])
+            random_state.grid(row=3, column=2)
+
+    def get_clf(self, params, frame):
+        self.clf = DecisionTreeClassifier(**params)
+
+        tk.Label(frame, text='Please, set the target variable:').grid(row=0, column=0)
+        target = ttk.Combobox(frame, values=list(self.dataframe.columns))
+        target.grid(row=1, column=0)
+        target.current(0)
+
+        tk.Label(frame, text='Please, set the size of test data.', justify=tk.LEFT).grid(row=2, column=0)
+        split = tk.Entry(frame)
+        split.grid(row=3, column=0)
+
+        def process_model(cur_frame, out_self, tar, spl):
+            df = out_self.dataframe
+            X = df.drop(tar, axis=1)
+            y = df[tar]
+            if spl != '':
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=float(spl))
+                out_self.clf.fit(X_train, y_train)
+                tk.Label(cur_frame,
+                         text='Model accuracy: ' + str(out_self.clf.score(X_test, y_test))
+                         ).grid(row=0, column=1)
+
+        tk.Button(frame, text='Fit the model',
+                  command=lambda: process_model(frame, self, target.get(), split.get())
+                  ).grid(row=4, column=0)
+
+    def get_data(self):
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
-        cur.execute('INSERT INTO models VALUES (?, ?)', ('mall', model))
-        # print(cur.execute('SELECT * FROM models').fetchall())
-        tk.Label(self, text='Model successfully fitted and imported to models table').pack()
-        conn.close()
-
-    def prediction(self):
-        conn = sqlite3.connect('main.sqlite3')
-        cur = conn.cursor()
-        clf = cur.execute('SELECT model FROM models').fetchone()
-        print(clf, type(clf))
-        clf = pickle.loads(clf[0])
-        prediction = clf.predict(self.X_test)
-        tk.Label(self, text=str(prediction)).pack()
-        conn.close()
+        try:
+            query = f'SELECT table_file FROM {self.table} WHERE name = "{self.data}"'
+            return deserialize(cur.execute(query).fetchall()[0][0])
+        finally:
+            conn.close()
 
 
 def serialize(file):
