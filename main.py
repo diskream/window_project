@@ -114,10 +114,9 @@ class BottomFrame(tk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
         tk.LabelFrame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.file_path_info = tk.StringVar()
-        self.file_path_info.set('File path will be there')
         self.file_path = ''
-        tk.Label(self, textvariable=self.file_path_info).pack(side=tk.TOP)
+        self.file_path_lbl = tk.Label(self, text='File path: ' + self.file_path)
+        self.file_path_lbl.pack(side=tk.TOP)
         self.file_open_button = tk.Button(self, text='File Upload',
                                           command=self.open_file).pack(anchor=tk.SE, expand=True)
         self.db_create_button = tk.Button(self, text='Add table to Tasks',
@@ -130,7 +129,7 @@ class BottomFrame(tk.LabelFrame):
 
     def open_file(self):
         self.file_path = askopenfile(mode='r').name
-        self.file_path_info.set('File path: ' + self.file_path)
+        self.file_path_lbl['text'] = 'File path: \n' + self.file_path
 
     def input_table(self):
         conn = sqlite3.connect('main.sqlite3')
@@ -248,7 +247,7 @@ class MLView(tk.Tk):
         self.alg_box.current(0)
         self.update_title()
         self.alg_box_button = tk.Button(self, text='Enter', command=self.alg_configuration
-                                        ).grid(row=2, column=1,sticky=tk.W)
+                                        ).grid(row=2, column=1, sticky=tk.W)
 
     def update_title(self):
         self.title('Working on {} model'.format(self.alg_box.get()))
