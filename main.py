@@ -81,8 +81,7 @@ class TopFrame(tk.Frame):
             print('No table selected. Please, select the table to continue.')
             return
         elif table['tags'][0] == 'table':
-            print('Please, select data file, not DB table.')
-            return
+            TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'])
         else:
             TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'], table=table['tags'])
 
@@ -115,17 +114,37 @@ class BottomFrame(tk.LabelFrame):
         tk.LabelFrame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.file_path = ''
-        self.file_path_lbl = tk.Label(self, text='File path: ' + self.file_path)
-        self.file_path_lbl.pack(side=tk.TOP)
+
+        self.file_path_lbl = tk.Label(self, text='File path: \n' + self.file_path)
+        self.file_path_lbl.pack(anchor=tk.N)
+
         self.file_open_button = tk.Button(self, text='File Upload',
-                                          command=self.open_file).pack(anchor=tk.SE, expand=True)
+                                          command=self.open_file)
+        self.file_open_button.pack(anchor=tk.SE)
+
         self.db_create_button = tk.Button(self, text='Add table to Tasks',
-                                          command=self.input_table).pack(anchor=tk.SE)
+                                          command=self.input_table)
+        self.db_create_button.pack(anchor=tk.SE)
+
         self.db_create_info = tk.StringVar()
         self.db_create_info.set('Please, enter table name:')
-        tk.Label(self, textvariable=self.db_create_info).pack(anchor=tk.CENTER)
+        tk.Label(self, textvariable=self.db_create_info).pack(anchor=tk.S)
+
         self.table_name = tk.StringVar()
-        self.table_name_entry = tk.Entry(self, textvariable=self.table_name).pack(anchor=tk.CENTER)
+        self.table_name_entry = tk.Entry(self, textvariable=self.table_name)
+        self.table_name_entry.pack(anchor=tk.S)
+
+        # self.table_box = ttk.Combobox(self, values=self.get_table_list())
+        # self.table_box.pack(side=tk.BOTTOM)
+
+    def get_table_list(self):
+        conn = sqlite3.connect('main.sqlite3')
+        cur = conn.cursor()
+        try:
+            table_list = cur.execute('SELECT name FROM sqlite_master WHERE type = "table";').fetchall()[1:]
+            return [table[0] for table in table_list]
+        finally:
+            conn.close()
 
     def open_file(self):
         self.file_path = askopenfile(mode='r').name
@@ -140,7 +159,8 @@ class BottomFrame(tk.LabelFrame):
                 raise ValueError
             else:
                 file = serialize(pd.read_csv(str(self.file_path)))
-                cur.execute('INSERT INTO Tasks (name, table_file) VALUES (?, ?)', (name, file))
+                cur.execute('INSERT INTO Task_variant (task_id, variant_id, name, table_file) VALUES (2, 1, ?, ?)',
+                            (name, file))
                 conn.commit()
         except ValueError:
             self.db_create_info.set('Enter table name first!')
@@ -169,12 +189,15 @@ class BottomFrame(tk.LabelFrame):
 
 
 class TableView:
-    def __init__(self, master, geometry, table, data, *args, **kwargs):
+    def __init__(self, master, geometry, data, table=None,  *args, **kwargs):
         self.master = master
         self.master.geometry(geometry)
-        self.table = table[0]
+        if table is not None:
+            self.table = table[0]
+        else:
+            self.table = table
         self.data = data
-        tk.Label(self.master, text="{} table".format(self.table)).pack(side=tk.TOP)
+        tk.Label(self.master, text="{} table".format(self.data)).pack(side=tk.TOP)
         self.conn = sqlite3.connect('main.sqlite3')
         self.cur = self.conn.cursor()
         self.tv = ttk.Treeview(self.master, show='headings')
@@ -185,20 +208,36 @@ class TableView:
 
     def show_table(self):
         # creating DB cursor and configuring table environment
-        data = deserialize(self.cur.execute(f'SELECT table_file FROM {self.table} '
-                                            f'WHERE name = "{self.data}"').fetchall()[0][0])
-        self.tv['columns'] = list(data.columns)
-        for column in self.tv['columns']:
-            self.tv.heading(column, text=column)
-            self.tv.column(column, width=60)
-        rows = data.to_numpy().tolist()
         i = 0
-        for row in rows:
-            if i % 2 == 0:
-                self.tv.insert('', tk.END, values=row, tag='even')
-            else:
-                self.tv.insert('', tk.END, values=row, tag='odd')
-            i += 1
+        if self.table is not None:
+            data = deserialize(self.cur.execute(f'SELECT table_file FROM {self.table} '
+                                                f'WHERE name = "{self.data}"').fetchall()[0][0])
+            self.tv['columns'] = list(data.columns)
+            for column in self.tv['columns']:
+                self.tv.heading(column, text=column)
+                self.tv.column(column, width=60)
+            rows = data.to_numpy().tolist()
+            for row in rows:
+                if i % 2 == 0:
+                    self.tv.insert('', tk.END, values=row, tag='even')
+                else:
+                    self.tv.insert('', tk.END, values=row, tag='odd')
+                i += 1
+        else:
+            data = self.cur.execute(f'SELECT * FROM {self.data}').fetchall()
+            self.cur.execute('SELECT * FROM {} WHERE 1=0'.format(self.data))
+            columns = [d[0] for d in self.cur.description]
+            self.tv['columns'] = columns
+            for column in self.tv['columns']:
+                self.tv.heading(column, text=column)
+                self.tv.column(column, width=60)
+            for row in data:
+                if i % 2 == 0:
+                    self.tv.insert('', tk.END, values=row, tag='even')
+                else:
+                    self.tv.insert('', tk.END, values=row, tag='odd')
+                i += 1
+
         self.tv.tag_configure('even', background='#E8E8E8')
         self.tv.tag_configure('odd', background='#DFDFDF')
         self.tv.place(relheight=1, relwidth=1)  # expand=True, fill=tk.BOTH)
@@ -234,6 +273,7 @@ class MLView(tk.Tk):
         self.data = data
         self.dataframe = self.get_data()
         self.clf = 'classifier pattern'
+        self.accuracy = 0
         tk.Label(self, text='Data: ' + self.data + '\nfrom ' + self.table + ' table.').grid(row=0, column=1)
         tk.Label(self, text='Please, choose ML algorithm:').grid(row=1, column=0)
 
@@ -335,13 +375,32 @@ class MLView(tk.Tk):
             if spl != '':
                 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=float(spl))
                 out_self.clf.fit(X_train, y_train)
+                out_self.accuracy = out_self.clf.score(X_test, y_test)
                 tk.Label(cur_frame,
-                         text='Model accuracy: ' + str(out_self.clf.score(X_test, y_test))
+                         text='Model accuracy: ' + str(out_self.accuracy)
                          ).grid(row=0, column=1)
 
         tk.Button(frame, text='Fit the model',
                   command=lambda: process_model(frame, self, target.get(), split.get())
                   ).grid(row=4, column=0)
+
+        def save_to_db(data, table, model, acc):
+            conn = sqlite3.connect('main.sqlite3')
+            cur = conn.cursor()
+            try:
+                query = cur.execute(f'SELECT * FROM {table} WHERE name = "{data}"').fetchall()[0]
+                foreign_key = int(query[0])
+                key = int(query[1])
+                cur.execute('INSERT INTO Models (model_id, variant_id, task_id, name, model_code, accuracy) '
+                            'VALUES (?, ?, ?, ?, ?, ?)', (key, key, foreign_key, data + ' model', model, acc))
+                conn.commit()
+            finally:
+                conn.close()
+
+        tk.Button(frame, text='Save model to database',
+                  command=lambda: save_to_db(self.data, self.table,
+                                             serialize(self.clf),
+                                             self.accuracy)).place(x=290, y=90)
 
     def get_data(self):
         conn = sqlite3.connect('main.sqlite3')
