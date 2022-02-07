@@ -1,26 +1,31 @@
+import sqlite3
+import pickle
 import tkinter as tk
+import pandas as pd
 from tkinter import ttk
 from tkinter.filedialog import askopenfile
-import pandas as pd
-import sqlite3
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-import pickle
 
 
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry('500x500')
-        self.resizable(width=False, height=False)
+        self.HEIGHT = 700
+        self.WIDTH = (7 * self.HEIGHT) // 9
+        self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
+        # self.resizable(width=False, height=False)
         self.title('Brand New Window')
 
         # self.table_list_frame = tk.LabelFrame(self.master, text='Table list')
+
+
         self.table_list_frame = TopFrame(self)
-        self.table_list_frame.place(x=0, y=0, anchor='nw', width=500, height=250)
+        self.table_list_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
+
 
         self.file_upload_frame = BottomFrame(self)
-        self.file_upload_frame.place(x=10, y=255, anchor='nw', width=480, height=235)
+        self.file_upload_frame.pack(fill=tk.BOTH, side=tk.BOTTOM, expand=True)
 
         # self.table_list_frame.pack(anchor=tk.NW)
         # self.to_tree_frame = TopRightFrame(self, text='Open a table')
@@ -44,7 +49,7 @@ class TopFrame(tk.Frame):
         #     self.list_box.insert(index, table)
         # self.list_box.pack(anchor=tk.W)
 
-        tk.Label(self, text='List of all database tables').pack(side=tk.TOP)
+        tk.Label(self, text='Список всех').pack(side=tk.TOP)
 
         # creating hierarchical treeview
         self.tv_hier = ttk.Treeview(self.parent, height=3, show='tree')
@@ -189,7 +194,7 @@ class BottomFrame(tk.LabelFrame):
 
 
 class TableView:
-    def __init__(self, master, geometry, data, table=None,  *args, **kwargs):
+    def __init__(self, master, geometry, data, table=None, *args, **kwargs):
         self.master = master
         self.master.geometry(geometry)
         if table is not None:
