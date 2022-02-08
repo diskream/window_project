@@ -19,10 +19,8 @@ class App(tk.Tk):
 
         # self.table_list_frame = tk.LabelFrame(self.master, text='Table list')
 
-
         self.table_list_frame = TopFrame(self)
         self.table_list_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
-
 
         self.file_upload_frame = BottomFrame(self)
         self.file_upload_frame.pack(fill=tk.BOTH, side=tk.BOTTOM, expand=True)
@@ -37,9 +35,9 @@ class App(tk.Tk):
 
 
 class TopFrame(tk.Frame):
-    def __init__(self, parent, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
+    def __init__(self, master, *args, **kwargs):
+        tk.Frame.__init__(self, master, *args, **kwargs)
+        self.master = master
 
         # initializing ListBox and putting values into it
         # self.tables_list = self.get_tables_list()
@@ -49,17 +47,23 @@ class TopFrame(tk.Frame):
         #     self.list_box.insert(index, table)
         # self.list_box.pack(anchor=tk.W)
 
-        tk.Label(self, text='Список всех').pack(side=tk.TOP)
-
-        # creating hierarchical treeview
-        self.tv_hier = ttk.Treeview(self.parent, height=3, show='tree')
-        self.tv_hier.place(x=150, y=20, height=150)
+        tk.Label(self, text='Выберите данные из вложенного списка:').pack(side=tk.TOP, ipady=10)
+        # Creating hierarchical treeview
+        self.tv_hier = ttk.Treeview(self, height=13, show='tree')
+        self.tv_hier.pack(side=tk.TOP)
         self.insert_tv()
 
-        # creating buttons
-        self.ml_window_button = tk.Button(self, text='Open ML window', command=self.open_ml).pack(side=tk.BOTTOM)
-        self.table_open_button = tk.Button(self, text='Open a TreeView in the new window',
-                                           command=self.open_table).pack(side=tk.BOTTOM)
+        # Buttons for the new windows
+        self.ml_window_btn = tk.Button(self, text='Открыть окно классификации', command=self.open_ml)
+        self.ml_window_btn.pack(side=tk.BOTTOM)
+        self.table_open_btn = tk.Button(self, text='Открыть окно обзора данных', command=self.open_table)
+        self.table_open_btn.pack(side=tk.BOTTOM)
+        self.data_btn = tk.Button(self, text='Открыть окно редактирования данных', command=self.open_data)
+        self.data_btn.pack(side=tk.BOTTOM)
+
+        self.warn_var = tk.StringVar()
+        self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
+        self.warn_lbl.pack(side=tk.BOTTOM)
 
     def insert_tv(self):
         conn = sqlite3.connect('main.sqlite3')
@@ -83,7 +87,7 @@ class TopFrame(tk.Frame):
         print(self.tv_hier.item(self.tv_hier.selection()))
         table = self.tv_hier.item(self.tv_hier.selection())
         if table['text'] == '':
-            print('No table selected. Please, select the table to continue.')
+            self.warn_var.set('Данные не выбраны. Пожалуйста, выберетите данные из списка выше.')
             return
         elif table['tags'][0] == 'table':
             TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'])
@@ -92,17 +96,26 @@ class TopFrame(tk.Frame):
 
     def open_ml(self):
         table = self.tv_hier.item(self.tv_hier.selection())
-        if table['text'] == '':
-            print('No table selected. Please, select the table to continue.')
-            return
-        elif table['tags'][0] == 'table':
-            print('Please, select data file, not DB table.')
-            return
-        else:
+        if self.table_check(table):
             MLView(data=table['text'], table=table['tags'])
 
+    def open_data(self):
+        table = self.tv_hier.item(self.tv_hier.selection())
+        if self.table_check(table):
+            DataView(self.master.HEIGHT, data=table['text'], table=table['tags'])
+
+    def table_check(self, table):
+        if table['text'] == '':
+            self.warn_var.set('Данные не выбраны. Пожалуйста, выберетите данные из списка выше.')
+            return False
+        elif table['tags'][0] == 'table':
+            self.warn_var.set('Пожалуйста, выберите данные, а не таблицу.')
+            return False
+        else:
+            return True
+
     @staticmethod
-    def get_tables_list(self):
+    def get_tables_list():
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
         try:
@@ -203,70 +216,36 @@ class TableView:
             self.table = table
         self.data = data
         tk.Label(self.master, text="{} table".format(self.data)).pack(side=tk.TOP)
-        self.conn = sqlite3.connect('main.sqlite3')
-        self.cur = self.conn.cursor()
         self.tv = ttk.Treeview(self.master, show='headings')
-        self.show_table()
+        show_table(self)
 
         # self.configuration_tv()
         # self.cols = self.get_cols()
 
-    def show_table(self):
-        # creating DB cursor and configuring table environment
-        i = 0
-        if self.table is not None:
-            data = deserialize(self.cur.execute(f'SELECT table_file FROM {self.table} '
-                                                f'WHERE name = "{self.data}"').fetchall()[0][0])
-            self.tv['columns'] = list(data.columns)
-            for column in self.tv['columns']:
-                self.tv.heading(column, text=column)
-                self.tv.column(column, width=60)
-            rows = data.to_numpy().tolist()
-            for row in rows:
-                if i % 2 == 0:
-                    self.tv.insert('', tk.END, values=row, tag='even')
-                else:
-                    self.tv.insert('', tk.END, values=row, tag='odd')
-                i += 1
-        else:
-            data = self.cur.execute(f'SELECT * FROM {self.data}').fetchall()
-            self.cur.execute('SELECT * FROM {} WHERE 1=0'.format(self.data))
-            columns = [d[0] for d in self.cur.description]
-            self.tv['columns'] = columns
-            for column in self.tv['columns']:
-                self.tv.heading(column, text=column)
-                self.tv.column(column, width=60)
-            for row in data:
-                if i % 2 == 0:
-                    self.tv.insert('', tk.END, values=row, tag='even')
-                else:
-                    self.tv.insert('', tk.END, values=row, tag='odd')
-                i += 1
 
-        self.tv.tag_configure('even', background='#E8E8E8')
-        self.tv.tag_configure('odd', background='#DFDFDF')
-        self.tv.place(relheight=1, relwidth=1)  # expand=True, fill=tk.BOTH)
-        ysb = ttk.Scrollbar(self.master, orient=tk.VERTICAL, command=self.tv.yview)
-        xsb = ttk.Scrollbar(self.master, orient=tk.HORIZONTAL, command=self.tv.xview)
-        self.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
-        ysb.pack(side=tk.RIGHT, fill=tk.Y)
-        xsb.pack(side=tk.BOTTOM, fill=tk.X)
+class DataView(tk.Tk):
+    def __init__(self, geo, table, data, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
 
-    # def get_cols(self):
-    #     # getting columns from table
-    #     self.cur.execute('SELECT * FROM {} WHERE 1=0'.format(self.table))
-    #     return [d[0] for d in self.cur.description]
-    #
-    # def configuration_tv(self):
-    #     # configuring headings
-    #     n, m = 1, 0
-    #     for col in self.cols:
-    #         self.tv.heading('#{}'.format(n), text=col)
-    #         self.tv.column(m, width=80)
-    #         n += 1
-    #         m += 1
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+        self.style.configure('Treeview.Heading', background='#42aaff')
 
-    # configuring scrollbar
+        # Set 16:9 window geometry
+        self.WIDTH = 16 * geo // 9
+        self.HEIGHT = geo
+        self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
+
+        self.table = table[0]
+        self.data = data
+
+        self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.60)
+        self.table_frm.pack(fill=tk.BOTH, expand=True)
+        self.action_frm = tk.Frame(self)
+        self.action_frm.pack(fill=tk.BOTH, expand=True)
+
+        self.tv = ttk.Treeview(self.table_frm, show='headings', style='Treeview')
+        show_table(self)
 
 
 class MLView(tk.Tk):
@@ -415,6 +394,69 @@ class MLView(tk.Tk):
             return deserialize(cur.execute(query).fetchall()[0][0])
         finally:
             conn.close()
+
+
+def show_table(method):
+    '''
+    Отображает таблицу
+    :param method: используется для ссылки на self
+    :return:
+    '''
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    i = 0
+    if method.table is not None:
+        data = deserialize(cur.execute(f'SELECT table_file FROM {method.table} '
+                                              f'WHERE name = "{method.data}"').fetchall()[0][0])
+        method.tv['columns'] = list(data.columns)
+        for column in method.tv['columns']:
+            method.tv.heading(column, text=column)
+            method.tv.column(column, width=60)
+        rows = data.to_numpy().tolist()
+        for row in rows:
+            if i % 2 == 0:
+                method.tv.insert('', tk.END, values=row, tag='even')
+            else:
+                method.tv.insert('', tk.END, values=row, tag='odd')
+            i += 1
+    else:
+        data = cur.execute(f'SELECT * FROM {method.data}').fetchall()
+        cur.execute('SELECT * FROM {} WHERE 1=0'.format(method.data))
+        columns = [d[0] for d in method.cur.description]
+        method.tv['columns'] = columns
+        for column in method.tv['columns']:
+            method.tv.heading(column, text=column)
+            method.tv.column(column, width=60)
+        for row in data:
+            if i % 2 == 0:
+                method.tv.insert('', tk.END, values=row, tag='even')
+            else:
+                method.tv.insert('', tk.END, values=row, tag='odd')
+            i += 1
+
+    method.tv.tag_configure('even', background='#E8E8E8')
+    method.tv.tag_configure('odd', background='#DFDFDF')
+    method.tv.pack(fill=tk.BOTH, expand=True)  # expand=True, fill=tk.BOTH)
+    # ysb = ttk.Scrollbar(method.master, orient=tk.VERTICAL, command=method.tv.yview)
+    # xsb = ttk.Scrollbar(method.master, orient=tk.HORIZONTAL, command=method.tv.xview)
+    # method.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
+    # ysb.pack(side=tk.RIGHT, fill=tk.Y)
+    # xsb.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # def get_cols(self):
+    #     # getting columns from table
+    #     self.cur.execute('SELECT * FROM {} WHERE 1=0'.format(self.table))
+    #     return [d[0] for d in self.cur.description]
+    #
+    # def configuration_tv(self):
+    #     # configuring headings
+    #     n, m = 1, 0
+    #     for col in self.cols:
+    #         self.tv.heading('#{}'.format(n), text=col)
+    #         self.tv.column(m, width=80)
+    #         n += 1
+    #         m += 1
+
 
 
 def serialize(file):
