@@ -238,14 +238,63 @@ class DataView(tk.Tk):
 
         self.table = table[0]
         self.data = data
+        self.pd_data = get_data(self)
 
-        self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.60)
+        self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.77)
         self.table_frm.pack(fill=tk.BOTH, expand=True)
         self.action_frm = tk.Frame(self)
         self.action_frm.pack(fill=tk.BOTH, expand=True)
+        self.tv1_frm = tk.Frame(self.table_frm)
+        self.tv1_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.tv2_frm = tk.Frame(self.table_frm, height=10)
+        self.tv2_frm.pack(side=tk.TOP, fill=tk.X)
+        self.af1_frm = tk.Frame(self.action_frm)
+        self.af1_frm.pack(side=tk.BOTTOM)
 
-        self.tv = ttk.Treeview(self.table_frm, show='headings', style='Treeview')
+        self.tv = ttk.Treeview(self.tv1_frm, show='headings', style='Treeview')
         show_table(self)
+
+        self.warn_var = tk.StringVar()
+        self.warn_lbl = tk.Label(self.action_frm, textvariable=self.warn_var)
+        self.warn_lbl.pack(anchor=tk.N)
+        self.isnull_var = tk.StringVar()
+
+        self.isnull_lbl = tk.Label(self.action_frm, text=self.check_empty())
+        self.isnull_lbl.pack(anchor=tk.NW)
+
+        # Buttons
+        tk.Button(self.af1_frm, text='Преобразование данных', command=self.str_to_num).pack(side=tk.LEFT, pady=20,
+                                                                                            padx=20)
+        tk.Button(self.af1_frm, text='Удаление колонки', command=self.del_column).pack(side=tk.LEFT, pady=20, padx=20)
+        tk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
+        tk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
+                                                                                                padx=20)
+
+    def str_to_num(self):
+        pass
+
+    def del_column(self):
+        pass
+
+    def add_column(self):
+        pass
+
+    def empty_data(self):
+        pass
+
+    def check_empty(self):
+        if self.pd_data.isnull().sum().nunique() == 1:
+            return 'Пропущенных значений не обнаружено'
+        else:
+            isnull_cols = list()
+            for col in self.pd_data.columns:
+                ser = pd.isnull(self.pd_data[col])
+                if ser.nunique() == 2:
+                    isnull_cols.append(col)
+            if len(isnull_cols) <= 3:
+                return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
+            else:
+                return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
 
 
 class MLView(tk.Tk):
@@ -396,22 +445,49 @@ class MLView(tk.Tk):
             conn.close()
 
 
-def show_table(method):
+def treeview_sort_column(tv, col, reverse):
+    l = [(tv.set(k, col), k) for k in tv.get_children('')]
+    l.sort(key=lambda t: float(t[0]), reverse=reverse)
+
+    # rearrange items in sorted positions
+    for index, (val, k) in enumerate(l):
+        tv.move(k, '', index)
+
+    # reverse sort next time
+    tv.heading(col, command=lambda: treeview_sort_column(tv, col, not reverse))
+
+
+def get_data(method):
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    try:
+        if method.table is not None:
+            data = deserialize(cur.execute(f'SELECT table_file FROM {method.table} '
+                                           f'WHERE name = "{method.data}"').fetchall()[0][0])
+            return data
+        else:
+            data = cur.execute(f'SELECT * FROM {method.data}').fetchall()
+            cur.execute('SELECT * FROM {} WHERE 1=0'.format(method.data))
+            columns = [d[0] for d in method.cur.description]
+            return data, columns
+    finally:
+        conn.close()
+
+
+def show_table(method, sb_place=None):
     '''
     Отображает таблицу
     :param method: используется для ссылки на self
     :return:
     '''
-    conn = sqlite3.connect('main.sqlite3')
-    cur = conn.cursor()
+    column_width = 100
     i = 0
     if method.table is not None:
-        data = deserialize(cur.execute(f'SELECT table_file FROM {method.table} '
-                                              f'WHERE name = "{method.data}"').fetchall()[0][0])
+        data = get_data(method)
         method.tv['columns'] = list(data.columns)
         for column in method.tv['columns']:
-            method.tv.heading(column, text=column)
-            method.tv.column(column, width=60)
+            method.tv.heading(column, text=column, command=lambda: treeview_sort_column(method.tv, column, False))
+            method.tv.column(column, width=column_width)
         rows = data.to_numpy().tolist()
         for row in rows:
             if i % 2 == 0:
@@ -420,13 +496,11 @@ def show_table(method):
                 method.tv.insert('', tk.END, values=row, tag='odd')
             i += 1
     else:
-        data = cur.execute(f'SELECT * FROM {method.data}').fetchall()
-        cur.execute('SELECT * FROM {} WHERE 1=0'.format(method.data))
-        columns = [d[0] for d in method.cur.description]
+        data, columns = get_data(method)
         method.tv['columns'] = columns
         for column in method.tv['columns']:
-            method.tv.heading(column, text=column)
-            method.tv.column(column, width=60)
+            method.tv.heading(column, text=column, command=lambda: treeview_sort_column(method.tv, column, False))
+            method.tv.column(column, width=column_width)
         for row in data:
             if i % 2 == 0:
                 method.tv.insert('', tk.END, values=row, tag='even')
@@ -436,12 +510,13 @@ def show_table(method):
 
     method.tv.tag_configure('even', background='#E8E8E8')
     method.tv.tag_configure('odd', background='#DFDFDF')
-    method.tv.pack(fill=tk.BOTH, expand=True)  # expand=True, fill=tk.BOTH)
-    # ysb = ttk.Scrollbar(method.master, orient=tk.VERTICAL, command=method.tv.yview)
-    # xsb = ttk.Scrollbar(method.master, orient=tk.HORIZONTAL, command=method.tv.xview)
-    # method.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
-    # ysb.pack(side=tk.RIGHT, fill=tk.Y)
-    # xsb.pack(side=tk.BOTTOM, fill=tk.X)
+    if sb_place is None:
+        ysb = ttk.Scrollbar(method.tv1_frm, orient=tk.VERTICAL, command=method.tv.yview)
+        xsb = ttk.Scrollbar(method.tv2_frm, orient=tk.HORIZONTAL, command=method.tv.xview)
+    method.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
+    ysb.pack(side=tk.RIGHT, fill=tk.Y)
+    method.tv.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+    xsb.pack(side=tk.BOTTOM, fill=tk.X)
 
     # def get_cols(self):
     #     # getting columns from table
@@ -456,7 +531,6 @@ def show_table(method):
     #         self.tv.column(m, width=80)
     #         n += 1
     #         m += 1
-
 
 
 def serialize(file):
