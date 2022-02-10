@@ -14,14 +14,6 @@ class TopFrame(tk.Frame):
         tk.Frame.__init__(self, master, *args, **kwargs)
         self.master = master
 
-        # initializing ListBox and putting values into it
-        # self.tables_list = self.get_tables_list()
-        # self.list_box = tk.Listbox(self)
-        # self.tables_list = sorted([table[0] for table in self.tables_list])
-        # for index, table in enumerate(self.tables_list):
-        #     self.list_box.insert(index, table)
-        # self.list_box.pack(anchor=tk.W)
-
         tk.Label(self, text='Выберите данные из вложенного списка:').pack(side=tk.TOP, ipady=10)
         # Creating hierarchical treeview
         self.tv_hier = ttk.Treeview(self, height=13, show='tree')
@@ -41,6 +33,8 @@ class TopFrame(tk.Frame):
         self.warn_lbl.pack(side=tk.BOTTOM)
 
     def insert_tv(self):
+        # Сделать иерархию по составному ключу: 1-1; 1-2 иерархически отобразить как 1: 1, 2
+
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
         try:
@@ -49,13 +43,35 @@ class TopFrame(tk.Frame):
             if len(tables_list) >= 4:
                 tables_list = tables_list[1:]
             for table in tables_list:
-                self.tv_hier.insert('', '0', 'item{}'.format(n), text=table, tags='table')
+                self.tv_hier.insert('', '0', f'item{n}', text=table, tags='table')
                 names = cur.execute('SELECT name FROM {}'.format(table[0])).fetchall()
-                for name in names:
-                    self.tv_hier.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
+                if table[0] != 'Task_variant':  # Для обычных случаев
+                    for name in names:
+                        self.tv_hier.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
+                else:  # Для расширенной иерархии вариантов заданий
+                    _sql = 'SELECT tv.task_id, tv.variant_id, tv.name, t.name FROM Task_variant as tv ' + \
+                           'INNER JOIN Tasks as t ON tv.task_id = t.task_id'
+                    query = cur.execute(_sql).fetchall()
+                    hierarchy_dict = {}  # Словарь для удобной запаковки данных в treeview
+                    for variant in query:  # Заполняем словарь Task: информация из Task_variant
+                        _temp_dict = {
+                            'task_id': variant[0],
+                            'variant_id': variant[1],
+                            'variant_name': variant[2]
+                        }
+                        if variant[-1] not in hierarchy_dict.keys():
+                            hierarchy_dict[variant[-1]] = [_temp_dict]
+                        else:
+                            hierarchy_dict[variant[-1]].append(_temp_dict)
+                    for task, info in hierarchy_dict.items():
+                        self.tv_hier.insert(f'item{n}', '1', f'item{n+1}', text=task)
+                        print(f'item{n}')
+                        for info1 in info:
+                            print(info1)
+                            self.tv_hier.insert(f'item{n+1}', tk.END, text=info1['variant_name'])
+
                 n += 1
         finally:
-            cur.close()
             conn.close()
 
     def open_table(self):

@@ -1,7 +1,6 @@
 import sqlite3
 import pickle
 import tkinter as tk
-import pandas as pd
 from tkinter import ttk
 
 
@@ -35,11 +34,12 @@ def get_data(method):
 
 
 def show_table(method, sb_place=None):
-    '''
+    """
     Отображает таблицу
     :param method: используется для ссылки на self
+    :param sb_place: место расположения скроллбара
     :return:
-    '''
+    """
     column_width = 100
     i = 0
     if method.table is not None:
@@ -73,6 +73,7 @@ def show_table(method, sb_place=None):
     if sb_place is None:
         ysb = ttk.Scrollbar(method.tv1_frm, orient=tk.VERTICAL, command=method.tv.yview)
         xsb = ttk.Scrollbar(method.tv2_frm, orient=tk.HORIZONTAL, command=method.tv.xview)
+
     method.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
     ysb.pack(side=tk.RIGHT, fill=tk.Y)
     method.tv.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
