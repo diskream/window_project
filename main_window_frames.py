@@ -6,7 +6,7 @@ from table_view import TableView
 from tkinter.filedialog import askopenfile
 from classification import MLView
 from data_views import DataView
-from functions import serialize
+from functions import serialize, Task
 
 
 class TopFrame(tk.Frame):
@@ -18,6 +18,7 @@ class TopFrame(tk.Frame):
         # Creating hierarchical treeview
         self.tv_hier = ttk.Treeview(self, height=13, show='tree')
         self.tv_hier.pack(side=tk.TOP)
+        self.db = {}
         self.insert_tv()
 
         # Buttons for the new windows
@@ -31,6 +32,7 @@ class TopFrame(tk.Frame):
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
         self.warn_lbl.pack(side=tk.BOTTOM)
+
 
     def insert_tv(self):
         # Сделать иерархию по составному ключу: 1-1; 1-2 иерархически отобразить как 1: 1, 2
@@ -48,10 +50,24 @@ class TopFrame(tk.Frame):
                 if table[0] != 'Task_variant':  # Для обычных случаев
                     for name in names:
                         self.tv_hier.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
+                    if table[0] == 'Tasks':
+                        _sql = 'SELECT task_id, name FROM TASKS'
+                        query = cur.execute(_sql).fetchall()
+                        _temp_lst = []
+                        for i in query:
+                            _temp_lst.append(Task(i[0], i[1]))
+                        self.db['Tasks'] = _temp_lst
+                        del _temp_lst
+                        print(self.db)
+                    elif table[0] == 'Models':
+                        _sql = "SELECT model_id, variant_id, task_id, name FROM Models"
+                        query = cur.execute(_sql).fetchall()
+                        print('Models: ', query)
                 else:  # Для расширенной иерархии вариантов заданий
                     _sql = 'SELECT tv.task_id, tv.variant_id, tv.name, t.name FROM Task_variant as tv ' + \
                            'INNER JOIN Tasks as t ON tv.task_id = t.task_id'
                     query = cur.execute(_sql).fetchall()
+                    print('Task_variant: ', query)
                     hierarchy_dict = {}  # Словарь для удобной запаковки данных в treeview
                     for variant in query:  # Заполняем словарь Task: информация из Task_variant
                         _temp_dict = {
@@ -65,10 +81,8 @@ class TopFrame(tk.Frame):
                             hierarchy_dict[variant[-1]].append(_temp_dict)
                     for task, info in hierarchy_dict.items():
                         self.tv_hier.insert(f'item{n}', '1', f'item{n+1}', text=task)
-                        print(f'item{n}')
                         for info1 in info:
-                            print(info1)
-                            self.tv_hier.insert(f'item{n+1}', tk.END, text=info1['variant_name'])
+                            self.tv_hier.insert(f'item{n+1}', tk.END, text=info1['variant_name'], tags=f'{table[0]}')
 
                 n += 1
         finally:
@@ -93,7 +107,7 @@ class TopFrame(tk.Frame):
     def open_data(self):
         table = self.tv_hier.item(self.tv_hier.selection())
         if self.table_check(table):
-            DataView(self.master.HEIGHT, data=table['text'], table=table['tags'])
+            DataView(self.master.HEIGHT, tasks_dict=self.tasks_dict, data=table['text'], table=table['tags'])
 
     def table_check(self, table):
         if table['text'] == '':
@@ -104,6 +118,9 @@ class TopFrame(tk.Frame):
             return False
         else:
             return True
+
+    def get_tasks_dict(self):
+        return self.tasks_dict
 
     @staticmethod
     def get_tables_list():

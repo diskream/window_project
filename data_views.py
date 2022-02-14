@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class DataView(tk.Tk):
-    def __init__(self, geo, table, data, *args, **kwargs):
+    def __init__(self, geo, table, data, tasks_dict, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.style = ttk.Style()
@@ -16,11 +16,14 @@ class DataView(tk.Tk):
         self.WIDTH = 16 * geo // 9
         self.HEIGHT = geo
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
+        self.tasks_dict = tasks_dict
 
         self.table = table[0]
         self.data = data
+        self.title('Редактирование таблицы ' + str(self.data))
         self.pd_data = get_data(self)
 
+        # Создание фреймов для корректного распределения элементов по окну
         self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.77)
         self.table_frm.pack(fill=tk.BOTH, expand=True)
         self.action_frm = tk.Frame(self)
@@ -50,12 +53,12 @@ class DataView(tk.Tk):
         tk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
         tk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
                                                                                                 padx=20)
-
+        print(self.tasks_dict)
     def str_to_num(self):
         pass
 
     def del_column(self):
-        pass
+        DeleteWindow('Удаление колонки', self.table, self.data, self.pd_data)
 
     def add_column(self):
         pass
@@ -76,3 +79,45 @@ class DataView(tk.Tk):
                 return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
             else:
                 return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
+
+
+class DeleteWindow(tk.Tk):
+    def __init__(self, title, table, data, pd_data, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+
+        self.geometry('500x500')
+        self.title(f'{title}')
+
+        self.table = table,
+        self.data = data,
+        self.pd_data = pd_data
+
+        lb_frm = tk.Frame(self, bg='blue')
+        self.action_frm = tk.Frame(self, bg='red')
+        confirm_frm = tk.Frame(self.action_frm)
+        self.columns_lb = tk.Listbox(lb_frm, selectmode=tk.EXTENDED)
+        for col in self.pd_data.columns:
+            self.columns_lb.insert(tk.END, col)
+        lb_frm.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+        self.action_frm.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+        confirm_frm.pack(side=tk.BOTTOM)
+        tk.Label(lb_frm, text='Пожалуйста, выберете одну или\nнесколько колонок для удаления').pack()
+        self.columns_lb.pack(fill=tk.BOTH, expand=1)
+
+        tk.Button(confirm_frm, text='Закрыть').pack(side=tk.RIGHT, padx=20, pady=5)
+        tk.Button(confirm_frm, text='Сохранить').pack(side=tk.RIGHT, padx=20, pady=5)
+
+        self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
+        self.warn_lbl.pack(side=tk.TOP)
+        tk.Button(self.action_frm, text='Удалить', command=self.del_col, width=15, pady=35).pack(side=tk.TOP)
+
+    def del_col(self):
+        cols = []
+        columns = self.columns_lb.curselection()
+        for column in columns:
+            cols.append(self.columns_lb.get(column))
+        if len(cols) == 0:
+            self.warn_lbl.configure(text='Не выбрана ни одна колонка для удаления.')
+        else:
+            self.warn_lbl.configure(text='')
+            self.pd_data.drop(columns=cols)

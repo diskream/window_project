@@ -100,3 +100,45 @@ def serialize(file):
 
 def deserialize(file):
     return pickle.loads(file)
+
+
+def upload_data(table, data, *columns):
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    try:
+        cols = ''.join(columns)
+        _sql = f'INSERT INTO {table} ({cols}) VALUES ()'
+        cur.execute(_sql)
+    finally:
+        conn.close()
+
+
+class Task:
+    def __init__(self, task_id: int, name: str, table_file=None):
+        self.task_id = task_id
+        self.name = name
+        if table_file:
+            self.table_file = table_file
+        else:
+            self.table_file = None
+
+    def get_id(self):
+        return self.task_id
+
+    def get_name(self):
+        return self.name
+
+    def get_bin(self):
+        if self.table_file:
+            return self.table_file
+        else:
+            return None
+
+    def get_attrs(self):
+        return [self.task_id, self.name, self.table_file]
+
+    def __str__(self):
+        return f'task_id: {self.task_id}, name: {self.name}'
+
+    def __repr__(self):
+        return f'(task_id: {self.task_id}, name: {self.name})'
