@@ -1,5 +1,6 @@
 import tkinter as tk
 import pandas as pd
+import json
 from tkinter import ttk
 import sqlite3
 from table_view import TableView
@@ -18,7 +19,8 @@ class TopFrame(tk.Frame):
         # Creating hierarchical treeview
         self.tv_hier = ttk.Treeview(self, height=13, show='tree')
         self.tv_hier.pack(side=tk.TOP)
-        self.insert_tv(get_db())
+        self.db = get_db()
+        self.insert_tv(self.db)
 
         # Buttons for the new windows
         self.ml_window_btn = tk.Button(self, text='Открыть окно классификации', command=self.open_ml)
@@ -55,8 +57,7 @@ class TopFrame(tk.Frame):
                     self.tv_hier.insert(table, '1', parent, text=parent, tags='Tasks')
                 for entry in entries:
                     print(entry)
-                    self.tv_hier.insert(entry.parent_name, '2', text=entry.name, tags=table)
-
+                    self.tv_hier.insert(entry.parent_name, '2', text=entry.name, tags=entry)
 
 
     def open_table(self):
@@ -78,7 +79,14 @@ class TopFrame(tk.Frame):
     def open_data(self):
         table = self.tv_hier.item(self.tv_hier.selection())
         if self.table_check(table):
-            DataView(self.master.HEIGHT, data=table['text'], table=table['tags'])
+            s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
+            entry = json.loads(s)
+            DataView(self.master.HEIGHT, entry=self.get_entry(entry['task_id'], entry['variant_id']))
+
+    def get_entry(self, task_id, variant_id):
+        for value in self.db['Task_variant']:
+            if value.task_id == task_id and value.variant_id == variant_id:
+                return value
 
     def table_check(self, table):
         if table['text'] == '':
@@ -89,7 +97,6 @@ class TopFrame(tk.Frame):
             return False
         else:
             return True
-
 
     @staticmethod
     def get_tables_list():

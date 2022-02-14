@@ -5,6 +5,7 @@ class Task:
     def __init__(self, task_id: int, name: str, table_file=None):
         self.task_id = task_id
         self.name = name
+        self.table = 'Tasks'
         if table_file:
             self.table_file = table_file
         else:
@@ -29,6 +30,7 @@ class Variant:
         self.variant_id = variant_id
         self.name = name,
         self.parent_name = get_parent(self.task_id, self.variant_id)
+        self.table = 'Task_variant'
         if table_file:
             self.table_file = table_file
         else:
@@ -48,6 +50,7 @@ class Model:
         self.variant_id = variant_id
         self.name = name
         self.acc = acc
+        self.table = 'Models'
         if bin_file:
             self.bin = bin_file
         else:

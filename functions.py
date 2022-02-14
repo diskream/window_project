@@ -138,3 +138,15 @@ def get_db():
         return db
     finally:
         conn.close()
+
+
+def update_entry(entry):
+    if entry.table_file is not None:
+        return
+    else:
+        sql = f'SELECT table_file FROM {entry.table} WHERE task_id = {entry.task_id} '
+        if entry.variant_id:
+            sql += f'AND variant_id = {entry.variant_id} '
+        print(sql)
+        with sqlite3.connect('main.sqlite3') as conn:
+            entry.table_file = conn.cursor().execute(sql).fetchall()[0][0]

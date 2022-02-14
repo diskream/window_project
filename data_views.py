@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
-from functions import get_data, show_table
+from functions import deserialize, show_table, update_entry
 import pandas as pd
 
 
 class DataView(tk.Tk):
-    def __init__(self, geo, table, data, *args, **kwargs):
+    def __init__(self, geo, entry, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.style = ttk.Style()
@@ -17,10 +17,17 @@ class DataView(tk.Tk):
         self.HEIGHT = geo
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
 
-        self.table = table[0]
-        self.data = data
-        self.title('Редактирование таблицы ' + str(self.data))
-        self.pd_data = get_data(self)
+        self.entry = entry
+        print(entry, type(self.entry))
+        self.table = entry.table
+        self.data = entry.name
+        self.entry.name = self.entry.name[0]
+        update_entry(self.entry)
+
+        self.title('Редактирование таблицы ' + self.entry.name)
+        self.pd_data = deserialize(self.entry.table_file)
+        print(self.pd_data)
+
 
         # Создание фреймов для корректного распределения элементов по окну
         self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.77)
