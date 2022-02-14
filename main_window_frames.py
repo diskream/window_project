@@ -6,20 +6,19 @@ from table_view import TableView
 from tkinter.filedialog import askopenfile
 from classification import MLView
 from data_views import DataView
-from functions import serialize, Task
+from functions import serialize, get_db
+
 
 
 class TopFrame(tk.Frame):
     def __init__(self, master, *args, **kwargs):
         tk.Frame.__init__(self, master, *args, **kwargs)
         self.master = master
-
         tk.Label(self, text='Выберите данные из вложенного списка:').pack(side=tk.TOP, ipady=10)
         # Creating hierarchical treeview
         self.tv_hier = ttk.Treeview(self, height=13, show='tree')
         self.tv_hier.pack(side=tk.TOP)
-        self.db = {}
-        self.insert_tv()
+        self.insert_tv(get_db())
 
         # Buttons for the new windows
         self.ml_window_btn = tk.Button(self, text='Открыть окно классификации', command=self.open_ml)
@@ -33,60 +32,32 @@ class TopFrame(tk.Frame):
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
         self.warn_lbl.pack(side=tk.BOTTOM)
 
+    def insert_tv(self, db):
+        """
+        Вставляет в таблицу записи. При вставке данных использует тэги.
+        Тэги нужны для определения родителя. Тэг "table" соответствует главной родительской таблице -
+        таблице из БД.
+        :param db:
+        :return:
+        """
+        for table, entries in db.items():
+            self.tv_hier.insert('', '0', table, text=table, tags='table')
+            if table != 'Task_variant':
+                for entry in entries:
+                    self.tv_hier.insert(table, tk.END, text=entry.name, tags=table)
+            else:
+                # Находим количество родительских данных
+                parents = []
+                for entry in entries:
+                    parents.append(entry.parent_name)
+                # Создаем для каждого родителя новую ветку:
+                for parent in set(parents):
+                    self.tv_hier.insert(table, '1', parent, text=parent, tags='Tasks')
+                for entry in entries:
+                    print(entry)
+                    self.tv_hier.insert(entry.parent_name, '2', text=entry.name, tags=table)
 
-    def insert_tv(self):
-        # Сделать иерархию по составному ключу: 1-1; 1-2 иерархически отобразить как 1: 1, 2
 
-        conn = sqlite3.connect('main.sqlite3')
-        cur = conn.cursor()
-        try:
-            n = 0
-            tables_list = cur.execute('SELECT name FROM sqlite_master WHERE type = "table";').fetchall()
-            if len(tables_list) >= 4:
-                tables_list = tables_list[1:]
-            for table in tables_list:
-                self.tv_hier.insert('', '0', f'item{n}', text=table, tags='table')
-                names = cur.execute('SELECT name FROM {}'.format(table[0])).fetchall()
-                if table[0] != 'Task_variant':  # Для обычных случаев
-                    for name in names:
-                        self.tv_hier.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
-                    if table[0] == 'Tasks':
-                        _sql = 'SELECT task_id, name FROM TASKS'
-                        query = cur.execute(_sql).fetchall()
-                        _temp_lst = []
-                        for i in query:
-                            _temp_lst.append(Task(i[0], i[1]))
-                        self.db['Tasks'] = _temp_lst
-                        del _temp_lst
-                        print(self.db)
-                    elif table[0] == 'Models':
-                        _sql = "SELECT model_id, variant_id, task_id, name FROM Models"
-                        query = cur.execute(_sql).fetchall()
-                        print('Models: ', query)
-                else:  # Для расширенной иерархии вариантов заданий
-                    _sql = 'SELECT tv.task_id, tv.variant_id, tv.name, t.name FROM Task_variant as tv ' + \
-                           'INNER JOIN Tasks as t ON tv.task_id = t.task_id'
-                    query = cur.execute(_sql).fetchall()
-                    print('Task_variant: ', query)
-                    hierarchy_dict = {}  # Словарь для удобной запаковки данных в treeview
-                    for variant in query:  # Заполняем словарь Task: информация из Task_variant
-                        _temp_dict = {
-                            'task_id': variant[0],
-                            'variant_id': variant[1],
-                            'variant_name': variant[2]
-                        }
-                        if variant[-1] not in hierarchy_dict.keys():
-                            hierarchy_dict[variant[-1]] = [_temp_dict]
-                        else:
-                            hierarchy_dict[variant[-1]].append(_temp_dict)
-                    for task, info in hierarchy_dict.items():
-                        self.tv_hier.insert(f'item{n}', '1', f'item{n+1}', text=task)
-                        for info1 in info:
-                            self.tv_hier.insert(f'item{n+1}', tk.END, text=info1['variant_name'], tags=f'{table[0]}')
-
-                n += 1
-        finally:
-            conn.close()
 
     def open_table(self):
         print(self.tv_hier.item(self.tv_hier.selection()))
@@ -107,7 +78,7 @@ class TopFrame(tk.Frame):
     def open_data(self):
         table = self.tv_hier.item(self.tv_hier.selection())
         if self.table_check(table):
-            DataView(self.master.HEIGHT, tasks_dict=self.tasks_dict, data=table['text'], table=table['tags'])
+            DataView(self.master.HEIGHT, data=table['text'], table=table['tags'])
 
     def table_check(self, table):
         if table['text'] == '':
@@ -119,8 +90,6 @@ class TopFrame(tk.Frame):
         else:
             return True
 
-    def get_tasks_dict(self):
-        return self.tasks_dict
 
     @staticmethod
     def get_tables_list():

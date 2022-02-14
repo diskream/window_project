@@ -28,6 +28,7 @@ class App(tk.Tk):
         self.table_list_frame.place(x=0, y=0, anchor='nw', width=250, height=250)
 
 
+
 if __name__ == '__main__':
     app = App()
     app.mainloop()

@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class DataView(tk.Tk):
-    def __init__(self, geo, table, data, tasks_dict, *args, **kwargs):
+    def __init__(self, geo, table, data, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.style = ttk.Style()
@@ -16,7 +16,6 @@ class DataView(tk.Tk):
         self.WIDTH = 16 * geo // 9
         self.HEIGHT = geo
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
-        self.tasks_dict = tasks_dict
 
         self.table = table[0]
         self.data = data

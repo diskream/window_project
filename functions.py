@@ -2,6 +2,7 @@ import sqlite3
 import pickle
 import tkinter as tk
 from tkinter import ttk
+from models import *
 
 
 def treeview_sort_column(tv, col, reverse):
@@ -113,32 +114,27 @@ def upload_data(table, data, *columns):
         conn.close()
 
 
-class Task:
-    def __init__(self, task_id: int, name: str, table_file=None):
-        self.task_id = task_id
-        self.name = name
-        if table_file:
-            self.table_file = table_file
-        else:
-            self.table_file = None
-
-    def get_id(self):
-        return self.task_id
-
-    def get_name(self):
-        return self.name
-
-    def get_bin(self):
-        if self.table_file:
-            return self.table_file
-        else:
-            return None
-
-    def get_attrs(self):
-        return [self.task_id, self.name, self.table_file]
-
-    def __str__(self):
-        return f'task_id: {self.task_id}, name: {self.name}'
-
-    def __repr__(self):
-        return f'(task_id: {self.task_id}, name: {self.name})'
+def get_db():
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    classes = {'Tasks': Task, 'Task_variant': Variant, 'Models': Model}
+    db = {}
+    try:
+        table_list = cur.execute('SELECT name FROM sqlite_master WHERE type = "table";').fetchall()[1:]
+        for table in table_list:
+            temp_columns = cur.execute(f'PRAGMA table_info({table[0]})').fetchall()
+            columns = []
+            for col in temp_columns:
+                columns.append(col[1])
+            try:
+                columns.remove('table_file')
+            except ValueError:
+                columns.remove('bin_file')
+            query = cur.execute(f'SELECT {", ".join(columns)} FROM {table[0]}').fetchall()
+            temp_lst = []
+            for que in query:
+                temp_lst.append(classes[table[0]](*que))
+            db[table[0]] = temp_lst
+        return db
+    finally:
+        conn.close()

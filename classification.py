@@ -133,7 +133,7 @@ class MLView(tk.Tk):
                 query = cur.execute(f'SELECT * FROM {table} WHERE name = "{data}"').fetchall()[0]
                 foreign_key = int(query[0])
                 key = int(query[1])
-                cur.execute('INSERT INTO Models (model_id, variant_id, task_id, name, model_code, accuracy) '
+                cur.execute('INSERT INTO Models (model_id, variant_id, task_id, name, bin_file, accuracy) '
                             'VALUES (?, ?, ?, ?, ?, ?)', (key, key, foreign_key, data + ' model', model, acc))
                 conn.commit()
             finally:
