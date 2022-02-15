@@ -103,15 +103,23 @@ def deserialize(file):
     return pickle.loads(file)
 
 
-def upload_data(table, data, *columns):
+def upload_data(table, **data):
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
-        cols = ''.join(columns)
-        _sql = f'INSERT INTO {table} ({cols}) VALUES ()'
-        cur.execute(_sql)
+        cols = ', '.join(data.keys())
+        if data['variant_id'] is None:
+            variant = cur.execute(f'SELECT MAX(variant_id) FROM {table} '
+                                  f'WHERE task_id = {data["task_id"]}').fetchone()[0]
+            data['variant_id'] = variant + 1
+        data['name'] += f'_{data["variant_id"]}'
+        placeholders = ', '.join('?' for _ in data.values())
+        _sql = f'INSERT INTO {table} ({cols}) VALUES ({placeholders})'
+        cur.execute(_sql, tuple(data.values()))
     finally:
+        conn.commit()
         conn.close()
+        return data
 
 
 def get_db():
@@ -150,3 +158,16 @@ def update_entry(entry):
         print(sql)
         with sqlite3.connect('main.sqlite3') as conn:
             entry.table_file = conn.cursor().execute(sql).fetchall()[0][0]
+
+
+def get_entry(table, **data):
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    try:
+        if isinstance(table, tuple):
+            table = table[0]
+        query = cur.execute(f'SELECT * FROM {table} WHERE task_id = {data["task_id"]}'
+                            f' AND variant_id = {data["variant_id"]}').fetchall()[0]
+        return Variant(*query)
+    finally:
+        conn.close()

@@ -1,12 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from functions import deserialize, show_table, update_entry
+from functions import serialize, deserialize, show_table, update_entry, upload_data, get_entry
 import pandas as pd
 
 
 class DataView(tk.Tk):
-    def __init__(self, geo, entry, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+    def __init__(self, geo, entry):
+        tk.Tk.__init__(self)
 
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -16,18 +16,17 @@ class DataView(tk.Tk):
         self.WIDTH = 16 * geo // 9
         self.HEIGHT = geo
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
+        print(self.geometry)
 
         self.entry = entry
-        print(entry, type(self.entry))
         self.table = entry.table
-        self.data = entry.name
-        self.entry.name = self.entry.name[0]
+        if isinstance(self.entry.name, tuple):
+            self.entry.name = self.entry.name[0]
+        self.data = self.entry.name
         update_entry(self.entry)
 
         self.title('Редактирование таблицы ' + self.entry.name)
         self.pd_data = deserialize(self.entry.table_file)
-        print(self.pd_data)
-
 
         # Создание фреймов для корректного распределения элементов по окну
         self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.77)
@@ -59,12 +58,14 @@ class DataView(tk.Tk):
         tk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
         tk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
                                                                                                 padx=20)
-        print(self.tasks_dict)
+
     def str_to_num(self):
         pass
 
     def del_column(self):
-        DeleteWindow('Удаление колонки', self.table, self.data, self.pd_data)
+        DeleteWindow('Удаление колонки',self.HEIGHT, self.entry, self.table, self.data, self.pd_data)
+        self.destroy()
+
 
     def add_column(self):
         pass
@@ -88,15 +89,18 @@ class DataView(tk.Tk):
 
 
 class DeleteWindow(tk.Tk):
-    def __init__(self, title, table, data, pd_data, *args, **kwargs):
+    def __init__(self, title, height, entry, table, data, pd_data, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.geometry('500x500')
         self.title(f'{title}')
 
+        self.HEIGHT = height
+        self.entry = entry
         self.table = table,
         self.data = data,
         self.pd_data = pd_data
+        self.columns_to_delete = list()
 
         lb_frm = tk.Frame(self, bg='blue')
         self.action_frm = tk.Frame(self, bg='red')
@@ -111,19 +115,28 @@ class DeleteWindow(tk.Tk):
         self.columns_lb.pack(fill=tk.BOTH, expand=1)
 
         tk.Button(confirm_frm, text='Закрыть').pack(side=tk.RIGHT, padx=20, pady=5)
-        tk.Button(confirm_frm, text='Сохранить').pack(side=tk.RIGHT, padx=20, pady=5)
+        tk.Button(confirm_frm, text='Сохранить', command=self.save).pack(side=tk.RIGHT, padx=20, pady=5)
 
         self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
         self.warn_lbl.pack(side=tk.TOP)
-        tk.Button(self.action_frm, text='Удалить', command=self.del_col, width=15, pady=35).pack(side=tk.TOP)
+        tk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35).pack(side=tk.TOP, fill=tk.X)
 
     def del_col(self):
-        cols = []
-        columns = self.columns_lb.curselection()
+        cols = []  # Названия колонок для удаления
+        columns = self.columns_lb.curselection()  # Индексы колонок для удаления
         for column in columns:
             cols.append(self.columns_lb.get(column))
         if len(cols) == 0:
             self.warn_lbl.configure(text='Не выбрана ни одна колонка для удаления.')
         else:
             self.warn_lbl.configure(text='')
-            self.pd_data.drop(columns=cols)
+            for i in columns[::-1]:
+                self.columns_lb.delete(i)
+            self.columns_to_delete = cols
+
+    def save(self):
+        self.pd_data = self.pd_data.drop(self.columns_to_delete, axis=1)
+        data = [self.entry.task_id, None, self.entry.name, serialize(self.pd_data)]
+        out = dict(zip(self.entry.columns, data))
+        DataView(self.HEIGHT, get_entry(self.table, **upload_data(self.table[0], **out)))
+        self.destroy()

@@ -31,10 +31,12 @@ class Variant:
         self.name = name,
         self.parent_name = get_parent(self.task_id, self.variant_id)
         self.table = 'Task_variant'
+        self.columns = ['task_id', 'variant_id', 'name', 'table_file']
         if table_file:
             self.table_file = table_file
         else:
             self.table_file = None
+
 
     def __str__(self):
         return str(self.__dict__)
