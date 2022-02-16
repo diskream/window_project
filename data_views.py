@@ -102,8 +102,8 @@ class DeleteWindow(tk.Tk):
         self.pd_data = pd_data
         self.columns_to_delete = list()
 
-        lb_frm = tk.Frame(self, bg='blue')
-        self.action_frm = tk.Frame(self, bg='red')
+        lb_frm = tk.Frame(self)
+        self.action_frm = tk.Frame(self)
         confirm_frm = tk.Frame(self.action_frm)
         self.columns_lb = tk.Listbox(lb_frm, selectmode=tk.EXTENDED)
         for col in self.pd_data.columns:
@@ -114,12 +114,13 @@ class DeleteWindow(tk.Tk):
         tk.Label(lb_frm, text='Пожалуйста, выберете одну или\nнесколько колонок для удаления').pack()
         self.columns_lb.pack(fill=tk.BOTH, expand=1)
 
-        tk.Button(confirm_frm, text='Закрыть').pack(side=tk.RIGHT, padx=20, pady=5)
+        tk.Button(confirm_frm, text='Закрыть', command=self.cancel).pack(side=tk.RIGHT, padx=20, pady=5)
         tk.Button(confirm_frm, text='Сохранить', command=self.save).pack(side=tk.RIGHT, padx=20, pady=5)
 
         self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
         self.warn_lbl.pack(side=tk.TOP)
-        tk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35).pack(side=tk.TOP, fill=tk.X)
+        tk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35,
+                  bg='#abcdef', activebackground='#a6caf0').pack(side=tk.TOP, fill=tk.X)
 
     def del_col(self):
         cols = []  # Названия колонок для удаления
@@ -136,7 +137,14 @@ class DeleteWindow(tk.Tk):
 
     def save(self):
         self.pd_data = self.pd_data.drop(self.columns_to_delete, axis=1)
-        data = [self.entry.task_id, None, self.entry.name, serialize(self.pd_data)]
+        if self.entry.table == 'Task_variant':
+            data = [self.entry.task_id, None, self.entry.name, serialize(self.pd_data)]
+        else:
+            data = [self.entry.task_id, self.entry.name, serialize(self.pd_data)]
         out = dict(zip(self.entry.columns, data))
-        DataView(self.HEIGHT, get_entry(self.table, **upload_data(self.table[0], **out)))
+        DataView(self.HEIGHT, get_entry('Task_variant', **upload_data('Task_variant', **out)))
+        self.destroy()
+
+    def cancel(self):
+        DataView(self.HEIGHT, self.entry)
         self.destroy()

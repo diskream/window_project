@@ -107,15 +107,21 @@ def upload_data(table, **data):
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
-        cols = ', '.join(data.keys())
+        # Тут костыль: if работает по сути только 1 раз - при обработке
+        # новой таблицы из Tasks. variant_id в таком случае всегда устанавливается
+        # 1. Сделать проверку на уже существующие измененные таблицы...
+        if 'variant_id' not in data:
+            data['variant_id'] = 1
         if data['variant_id'] is None:
             variant = cur.execute(f'SELECT MAX(variant_id) FROM {table} '
                                   f'WHERE task_id = {data["task_id"]}').fetchone()[0]
             data['variant_id'] = variant + 1
         data['name'] += f'_{data["variant_id"]}'
         placeholders = ', '.join('?' for _ in data.values())
+        cols = ', '.join(data.keys())
         _sql = f'INSERT INTO {table} ({cols}) VALUES ({placeholders})'
         cur.execute(_sql, tuple(data.values()))
+
     finally:
         conn.commit()
         conn.close()
@@ -153,7 +159,7 @@ def update_entry(entry):
         return
     else:
         sql = f'SELECT table_file FROM {entry.table} WHERE task_id = {entry.task_id} '
-        if entry.variant_id:
+        if hasattr(entry, 'variant_id'):
             sql += f'AND variant_id = {entry.variant_id} '
         print(sql)
         with sqlite3.connect('main.sqlite3') as conn:

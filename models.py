@@ -6,6 +6,7 @@ class Task:
         self.task_id = task_id
         self.name = name
         self.table = 'Tasks'
+        self.columns = ['task_id', 'name', 'table_file']
         if table_file:
             self.table_file = table_file
         else:

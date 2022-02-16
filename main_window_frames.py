@@ -22,6 +22,8 @@ class TopFrame(tk.Frame):
         self.db = get_db()
         self.insert_tv(self.db)
 
+        tk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP)
+
         # Buttons for the new windows
         self.ml_window_btn = tk.Button(self, text='Открыть окно классификации', command=self.open_ml)
         self.ml_window_btn.pack(side=tk.BOTTOM)
@@ -46,7 +48,7 @@ class TopFrame(tk.Frame):
             self.tv_hier.insert('', '0', table, text=table, tags='table')
             if table != 'Task_variant':
                 for entry in entries:
-                    self.tv_hier.insert(table, tk.END, text=entry.name, tags=table)
+                    self.tv_hier.insert(table, tk.END, text=entry.name, tags=entry)
             else:
                 # Находим количество родительских данных
                 parents = []
@@ -56,9 +58,7 @@ class TopFrame(tk.Frame):
                 for parent in set(parents):
                     self.tv_hier.insert(table, '1', parent, text=parent, tags='Tasks')
                 for entry in entries:
-                    print(entry)
                     self.tv_hier.insert(entry.parent_name, '2', text=entry.name, tags=entry)
-
 
     def open_table(self):
         print(self.tv_hier.item(self.tv_hier.selection()))
@@ -81,11 +81,12 @@ class TopFrame(tk.Frame):
         if self.table_check(table):
             s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
             entry = json.loads(s)
-            DataView(self.master.HEIGHT, entry=self.get_entry(entry['task_id'], entry['variant_id']))
+            DataView(self.master.HEIGHT, entry=self.get_entry(entry['table'], entry['task_id'],
+                                                              entry['variant_id'] if 'variant_id' in entry else None))
 
-    def get_entry(self, task_id, variant_id):
-        for value in self.db['Task_variant']:
-            if value.task_id == task_id and value.variant_id == variant_id:
+    def get_entry(self, table, task_id, variant_id=None):
+        for value in self.db[table]:
+            if value.task_id == task_id and (value.variant_id if hasattr(value, 'variant_id') else None) == variant_id:
                 return value
 
     def table_check(self, table):
@@ -98,6 +99,9 @@ class TopFrame(tk.Frame):
         else:
             return True
 
+    def update_table(self):
+        self.tv_hier.delete(*self.tv_hier.get_children())
+        self.insert_tv(get_db())
     @staticmethod
     def get_tables_list():
         conn = sqlite3.connect('main.sqlite3')
