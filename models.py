@@ -1,7 +1,15 @@
 import sqlite3
 
+"""
+Содержит классы, соответствующие таблицам в базе данных.
+В классах собрана вся необходимая информация для передачи записей таблицы внутри программы.
+Экземпляр каждого класса - конкретная запись в таблице БД.
+"""
 
 class Task:
+    """
+    Класс для таблицы Tasks
+    """
     def __init__(self, task_id: int, name: str, table_file=None):
         self.task_id = task_id
         self.name = name
@@ -26,6 +34,9 @@ class Task:
 
 
 class Variant:
+    """
+    Класс для таблицы Task_variant
+    """
     def __init__(self, task_id: int, variant_id: int, name: str, table_file=None):
         self.task_id = task_id
         self.variant_id = variant_id
@@ -38,7 +49,6 @@ class Variant:
         else:
             self.table_file = None
 
-
     def __str__(self):
         return str(self.__dict__)
 
@@ -47,6 +57,9 @@ class Variant:
 
 
 class Model:
+    """
+    Класс для таблицы Models
+    """
     def __init__(self, model_id: int, task_id: int, variant_id: int, name: str, acc: float, bin_file=None):
         self.model_id = model_id
         self.task_id = task_id

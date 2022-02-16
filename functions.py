@@ -5,15 +5,23 @@ from tkinter import ttk
 from models import *
 
 
+# Примечание: в функциях есть повторяющиейся строки с созданием соединения и курсора.
+# Сделать либо декоратор, либо функцию, которая будет возвращать соединение.
 def treeview_sort_column(tv, col, reverse):
+    """
+    Функция сортировки по возрастанию и убыванию колонки.
+    Примечание: функция работает некорректно и сортирует только последний столбец.
+    :param tv: фрейм таблицы
+    :param col: список колонок
+    :param reverse: bool. Отвечает за изменение направления сортировки
+    :return:
+    """
     l = [(tv.set(k, col), k) for k in tv.get_children('')]
     l.sort(key=lambda t: float(t[0]), reverse=reverse)
 
-    # rearrange items in sorted positions
     for index, (val, k) in enumerate(l):
         tv.move(k, '', index)
 
-    # reverse sort next time
     tv.heading(col, command=lambda: treeview_sort_column(tv, col, not reverse))
 
 
@@ -37,12 +45,12 @@ def get_data(method):
 def show_table(method, sb_place=None):
     """
     Отображает таблицу
-    :param method: используется для ссылки на self
+    :param method: используется для ссылки на self. Нужно для использования разными классами
     :param sb_place: место расположения скроллбара
     :return:
     """
     column_width = 100
-    i = 0
+    i = 0  # итератор для чередования цветов записей в таблице
     if method.table is not None:
         data = get_data(method)
         method.tv['columns'] = list(data.columns)
@@ -96,14 +104,34 @@ def show_table(method, sb_place=None):
 
 
 def serialize(file):
+    """
+    Переводит поданные на вход данные в последовательность байтов.
+    :param file: данные для преобразование
+    :return:
+    """
     return pickle.dumps(file)
 
 
 def deserialize(file):
+    """
+    Функция, обратная serialize.
+    Переводит последовательность байтов обратно в обхект.
+    :param file: последовательность байтов для преобразования.
+    :return:
+    """
     return pickle.loads(file)
 
 
 def upload_data(table, **data):
+    """
+    Выгружает новый вариант данных в БД в таблицу Task_variant.
+    Обрабатывает словарь с данными для корректной записи в БД.
+    Получает последний variant_id для семейства данных для инкремента и занесения новых данных
+    с корректным ключом.
+    :param table: название таблицы
+    :param data: словарь, в октором ключи - названия колонок, а значения - данные
+    :return:
+    """
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
@@ -117,11 +145,10 @@ def upload_data(table, **data):
                                   f'WHERE task_id = {data["task_id"]}').fetchone()[0]
             data['variant_id'] = variant + 1
         data['name'] += f'_{data["variant_id"]}'
-        placeholders = ', '.join('?' for _ in data.values())
-        cols = ', '.join(data.keys())
+        placeholders = ', '.join('?' for _ in data.values())  # форматирование данных для запроса
+        cols = ', '.join(data.keys())  # форматирование названия колонок для запроса
         _sql = f'INSERT INTO {table} ({cols}) VALUES ({placeholders})'
         cur.execute(_sql, tuple(data.values()))
-
     finally:
         conn.commit()
         conn.close()
@@ -155,6 +182,14 @@ def get_db():
 
 
 def update_entry(entry):
+    """
+    Обновляет класс, соответствующий записи в БД, занося закодированный файл.
+    Это нужно для того, чтобы при инициализации проекта и создании классов для каждой записи
+    не забивать память.
+    Конструкция if - else нужна для проверки, был ли файл помещен в класс ранее.
+    :param entry: класс записи в БД
+    :return:
+    """
     if entry.table_file is not None:
         return
     else:
@@ -167,6 +202,13 @@ def update_entry(entry):
 
 
 def get_entry(table, **data):
+    """
+    Создает объект записи из БД.
+    Запросом получает информацию о записи в виде списка.
+    :param table:
+    :param data:
+    :return: класс Variant
+    """
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
@@ -174,6 +216,6 @@ def get_entry(table, **data):
             table = table[0]
         query = cur.execute(f'SELECT * FROM {table} WHERE task_id = {data["task_id"]}'
                             f' AND variant_id = {data["variant_id"]}').fetchall()[0]
-        return Variant(*query)
+        return Variant(*query)  # * - распаковка списка
     finally:
         conn.close()

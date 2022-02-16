@@ -5,6 +5,10 @@ import pandas as pd
 
 
 class DataView(tk.Tk):
+    """
+    Главное окно редактирования данных
+    """
+
     def __init__(self, geo, entry):
         tk.Tk.__init__(self)
 
@@ -12,14 +16,16 @@ class DataView(tk.Tk):
         self.style.theme_use('clam')
         self.style.configure('Treeview.Heading', background='#42aaff')
 
-        # Set 16:9 window geometry
+        # Установка соотношения сторон 16:9
         self.WIDTH = 16 * geo // 9
         self.HEIGHT = geo
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
-        print(self.geometry)
 
+        # Entry - класс записи в базе данных
         self.entry = entry
         self.table = entry.table
+        # Проверка, является ли название данных котрежем
+        # Это связано с тем, что данные выдаются в запросе кортежем
         if isinstance(self.entry.name, tuple):
             self.entry.name = self.entry.name[0]
         self.data = self.entry.name
@@ -39,19 +45,19 @@ class DataView(tk.Tk):
         self.tv2_frm.pack(side=tk.TOP, fill=tk.X)
         self.af1_frm = tk.Frame(self.action_frm)
         self.af1_frm.pack(side=tk.BOTTOM)
-
+        # Создание таблицы
         self.tv = ttk.Treeview(self.tv1_frm, show='headings', style='Treeview')
         show_table(self)
-
+        # lbl - область текста, var - текстовые переменные, в которых хранятся сообщения
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self.action_frm, textvariable=self.warn_var)
         self.warn_lbl.pack(anchor=tk.N)
         self.isnull_var = tk.StringVar()
-
+        # Лейбл, отображающий количество пустых значений
         self.isnull_lbl = tk.Label(self.action_frm, text=self.check_empty())
         self.isnull_lbl.pack(anchor=tk.NW)
 
-        # Buttons
+        # Кнопки действий
         tk.Button(self.af1_frm, text='Преобразование данных', command=self.str_to_num).pack(side=tk.LEFT, pady=20,
                                                                                             padx=20)
         tk.Button(self.af1_frm, text='Удаление колонки', command=self.del_column).pack(side=tk.LEFT, pady=20, padx=20)
@@ -63,9 +69,12 @@ class DataView(tk.Tk):
         pass
 
     def del_column(self):
-        DeleteWindow('Удаление колонки',self.HEIGHT, self.entry, self.table, self.data, self.pd_data)
+        """
+        Открывает окно с действиями для удаления колонок
+        :return:
+        """
+        DeleteWindow('Удаление колонки', self.HEIGHT, self.entry, self.table, self.data, self.pd_data)
         self.destroy()
-
 
     def add_column(self):
         pass
@@ -74,6 +83,15 @@ class DataView(tk.Tk):
         pass
 
     def check_empty(self):
+        """
+         Главная функция проверки пропущенных значений.
+         Ищет по всему Dataframe пропущенные значения, агригирует функцией sum
+         количество пропущенных в каждом столбце.
+         Если количество уникальных значений равно 1 (в каждой колонке 0 пропущенных значений),
+         выводит соответствуещее уведомление. В противном случае заносит в список все колонки
+         с пропущенными значениями и возвращает их.
+        :return:
+        """
         if self.pd_data.isnull().sum().nunique() == 1:
             return 'Пропущенных значений не обнаружено'
         else:
@@ -89,6 +107,11 @@ class DataView(tk.Tk):
 
 
 class DeleteWindow(tk.Tk):
+    """
+    Окно с действиями для удаления колонок
+    """
+
+    # в __init__ передается слишком много аргументов - исправить
     def __init__(self, title, height, entry, table, data, pd_data, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
@@ -97,17 +120,20 @@ class DeleteWindow(tk.Tk):
 
         self.HEIGHT = height
         self.entry = entry
-        self.table = table,
-        self.data = data,
-        self.pd_data = pd_data
-        self.columns_to_delete = list()
-
+        self.table = table  # название таблицы в БД
+        self.data = data    # название данных
+        self.pd_data = pd_data  # данные в формате Dataframe
+        self.columns_to_delete = list()  # список выбранных колонок для удаления
+        # создание фреймов для удобного размещения элементов
         lb_frm = tk.Frame(self)
         self.action_frm = tk.Frame(self)
         confirm_frm = tk.Frame(self.action_frm)
+        # создание listbox со всеми колонками в данных. Параметр EXTENDED позволяет через
+        # ctrl или shift выделять несколько значений
         self.columns_lb = tk.Listbox(lb_frm, selectmode=tk.EXTENDED)
-        for col in self.pd_data.columns:
+        for col in self.pd_data.columns:  # заполнение данными
             self.columns_lb.insert(tk.END, col)
+        # размещение фреймов
         lb_frm.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
         self.action_frm.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
         confirm_frm.pack(side=tk.BOTTOM)
@@ -123,6 +149,11 @@ class DeleteWindow(tk.Tk):
                   bg='#abcdef', activebackground='#a6caf0').pack(side=tk.TOP, fill=tk.X)
 
     def del_col(self):
+        """
+        Получает информацию из выделенных элементов listbox
+        Ничего не возвращает, заносит информацию в аргументы класса
+        :return:
+        """
         cols = []  # Названия колонок для удаления
         columns = self.columns_lb.curselection()  # Индексы колонок для удаления
         for column in columns:
@@ -131,11 +162,18 @@ class DeleteWindow(tk.Tk):
             self.warn_lbl.configure(text='Не выбрана ни одна колонка для удаления.')
         else:
             self.warn_lbl.configure(text='')
-            for i in columns[::-1]:
+            for i in columns[::-1]:  # удаляет только выбранные элементы
                 self.columns_lb.delete(i)
             self.columns_to_delete = cols
 
     def save(self):
+        """
+        Отвечает за сохранение результатов в БД.
+        Конструкция if - else нужна для корректной записи в БД в правильную таблицу.
+        data - список данных, которые будут занесены в БД.
+        out - словарь, ключи которого являются названиями колонок, а значения - данными.
+        :return:
+        """
         self.pd_data = self.pd_data.drop(self.columns_to_delete, axis=1)
         if self.entry.table == 'Task_variant':
             data = [self.entry.task_id, None, self.entry.name, serialize(self.pd_data)]
@@ -146,5 +184,9 @@ class DeleteWindow(tk.Tk):
         self.destroy()
 
     def cancel(self):
+        """
+        Закрывает окно удаления и возвращает окно редактирования
+        :return:
+        """
         DataView(self.HEIGHT, self.entry)
         self.destroy()
