@@ -13,8 +13,8 @@ class DataView(tk.Tk):
         tk.Tk.__init__(self)
 
         self.style = ttk.Style()
-        self.style.theme_use('clam')
         self.style.configure('Treeview.Heading', background='#42aaff')
+
 
         # Установка соотношения сторон 16:9
         self.WIDTH = 16 * geo // 9
@@ -64,6 +64,8 @@ class DataView(tk.Tk):
         tk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
         tk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
                                                                                                 padx=20)
+        tk.Button(self.af1_frm, text='Информация по данным', command=self.description).pack(side=tk.LEFT, pady=20,
+                                                                                            padx=20)
 
     def str_to_num(self):
         pass
@@ -81,6 +83,9 @@ class DataView(tk.Tk):
 
     def empty_data(self):
         pass
+
+    def description(self):
+        DescriptionWindow(self.pd_data, self.WIDTH, self.HEIGHT)
 
     def check_empty(self):
         """
@@ -121,7 +126,7 @@ class DeleteWindow(tk.Tk):
         self.HEIGHT = height
         self.entry = entry
         self.table = table  # название таблицы в БД
-        self.data = data    # название данных
+        self.data = data  # название данных
         self.pd_data = pd_data  # данные в формате Dataframe
         self.columns_to_delete = list()  # список выбранных колонок для удаления
         # создание фреймов для удобного размещения элементов
@@ -190,3 +195,36 @@ class DeleteWindow(tk.Tk):
         """
         DataView(self.HEIGHT, self.entry)
         self.destroy()
+
+
+class DescriptionWindow(tk.Tk):
+    """
+    Окно с описательной статистикой
+    """
+
+    def __init__(self, pd_data, width, height):
+        tk.Tk.__init__(self)
+
+        self.geometry(f'{int(width//1.5)}x{height//2}')
+        self.title('Просмотр описатльной статистики')
+        self.tv = ttk.Treeview(self, show='headings')
+        self.show_table(pd_data)
+        self.tv.pack(fill=tk.BOTH, expand=1)
+
+    def show_table(self, pd_data):
+        """
+        Преобразовывает и заносит данные в таблицу.
+        Примечание по переменной description:
+        Dataframe описательной статистики имеет сложный индекс. Объект Treeview не поддерживает
+        вертикальные заголовки, поэтому необходимо удалить сложный индекс.
+        :param pd_data: pd.Dataframe данных, для которых используется описательная статистика
+        :return:
+        """
+        description = pd_data.describe().reset_index().rename(columns={'index': ''})
+        self.tv['columns'] = list(description.columns)
+        for col in self.tv['columns']:
+            self.tv.heading(col, text=col)
+            self.tv.column(col, width=50)
+        rows = description.to_numpy().tolist()
+        for row in rows:
+            self.tv.insert('', tk.END, values=row)
