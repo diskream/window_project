@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from functions import serialize, deserialize, show_table, update_entry, upload_data, get_entry
 import pandas as pd
+import io
 
 
 class DataView(tk.Tk):
@@ -14,7 +15,6 @@ class DataView(tk.Tk):
 
         self.style = ttk.Style()
         self.style.configure('Treeview.Heading', background='#42aaff')
-
 
         # Установка соотношения сторон 16:9
         self.WIDTH = 16 * geo // 9
@@ -52,14 +52,14 @@ class DataView(tk.Tk):
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self.action_frm, textvariable=self.warn_var)
         self.warn_lbl.pack(anchor=tk.N)
-        self.isnull_var = tk.StringVar()
+        self.null_columns = None
         # Лейбл, отображающий количество пустых значений
         self.isnull_lbl = tk.Label(self.action_frm, text=self.check_empty())
         self.isnull_lbl.pack(anchor=tk.NW)
 
         # Кнопки действий
-        tk.Button(self.af1_frm, text='Преобразование данных', command=self.str_to_num).pack(side=tk.LEFT, pady=20,
-                                                                                            padx=20)
+        tk.Button(self.af1_frm, text='Преобразование данных',
+                  command=self.data_preparation).pack(side=tk.LEFT, pady=20, padx=20)
         tk.Button(self.af1_frm, text='Удаление колонки', command=self.del_column).pack(side=tk.LEFT, pady=20, padx=20)
         tk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
         tk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
@@ -67,8 +67,8 @@ class DataView(tk.Tk):
         tk.Button(self.af1_frm, text='Информация по данным', command=self.description).pack(side=tk.LEFT, pady=20,
                                                                                             padx=20)
 
-    def str_to_num(self):
-        pass
+    def data_preparation(self):
+        DataPreparation(self.entry, self.pd_data, self.WIDTH, self.HEIGHT)
 
     def del_column(self):
         """
@@ -79,7 +79,7 @@ class DataView(tk.Tk):
         self.destroy()
 
     def add_column(self):
-        pass
+        AddWindow(self.entry)
 
     def empty_data(self):
         pass
@@ -105,6 +105,7 @@ class DataView(tk.Tk):
                 ser = pd.isnull(self.pd_data[col])
                 if ser.nunique() == 2:
                     isnull_cols.append(col)
+            self.null_columns = isnull_cols
             if len(isnull_cols) <= 3:
                 return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
             else:
@@ -145,7 +146,7 @@ class DeleteWindow(tk.Tk):
         tk.Label(lb_frm, text='Пожалуйста, выберете одну или\nнесколько колонок для удаления').pack()
         self.columns_lb.pack(fill=tk.BOTH, expand=1)
 
-        tk.Button(confirm_frm, text='Закрыть', command=self.cancel).pack(side=tk.RIGHT, padx=20, pady=5)
+        tk.Button(confirm_frm, text='Отмена', command=self.cancel).pack(side=tk.RIGHT, padx=20, pady=5)
         tk.Button(confirm_frm, text='Сохранить', command=self.save).pack(side=tk.RIGHT, padx=20, pady=5)
 
         self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
@@ -205,7 +206,7 @@ class DescriptionWindow(tk.Tk):
     def __init__(self, pd_data, width, height):
         tk.Tk.__init__(self)
 
-        self.geometry(f'{int(width//1.5)}x{height//2}')
+        self.geometry(f'{int(width // 1.5)}x{height // 2}')
         self.title('Просмотр описатльной статистики')
         self.tv = ttk.Treeview(self, show='headings')
         self.show_table(pd_data)
@@ -228,3 +229,64 @@ class DescriptionWindow(tk.Tk):
         rows = description.to_numpy().tolist()
         for row in rows:
             self.tv.insert('', tk.END, values=row)
+
+
+class AddWindow(tk.Tk):
+    def __init__(self, entry):
+        tk.Tk.__init__(self)
+
+        self.geometry('500x500')
+        self.entry = entry
+        self.title('Добавление колонки в данные ' + self.entry.name)
+
+
+class DataPreparation(tk.Tk):
+    def __init__(self, entry, pd_data, width, height):
+        tk.Tk.__init__(self)
+
+        self.geometry(f'{width}x{height}')
+        self.entry = entry
+        self.title('Преобразование данных ' + self.entry.name)
+
+        self.pd_data = pd_data
+        self.action_frm = tk.Frame(self, bg='blue')
+        self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
+        self.lbl_frm = tk.LabelFrame(self, text='Информация о данных')
+        self.lbl_frm.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+        self.lb_frm = tk.Frame(self, bg='red')
+        self.lb_frm.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
+
+        self.info_lbl = tk.Label(self.lbl_frm, text='', justify=tk.LEFT)
+        self.info_lbl.pack()
+
+        self.get_info()
+
+    def get_info(self):
+        buf = io.StringIO()
+        self.pd_data.info(buf=buf)
+        self.info_lbl.configure(text=buf.getvalue())
+
+
+# получаем словарь со всеми колонками типа object и их уникальными значениями
+def obj_to_int(df, length=100, cols=None):
+    if cols is None:
+        cols = []
+    if len(cols) == 0:
+        columns = df.columns
+    else:
+        columns = cols
+    obj_dict = dict()
+    for col in columns:
+        if df[col].dtype == 'O':
+            obj_dict[col] = df[col].unique().tolist()
+    # получаем словарь типа object:int64
+    # length - максимальное число изменений (изменять каждый раз для конктретного случая)
+    for key, value in obj_dict.items():
+        temp_dict = {}
+        if len(value) < length:
+            for i in range(len(value)):
+                temp_dict[value[i]] = i
+            obj_dict[key] = temp_dict
+    for key, value in obj_dict.items():
+        df[key] = df[key].replace(value)
+    return df
