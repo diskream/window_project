@@ -22,15 +22,19 @@ class TopFrame(tk.Frame):
         self.db = get_db()
         self.insert_tv(self.db)
 
-        tk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP)
-
+        tk.Button(self, text='Обновить таблицу', command=self.update_table, pady=10).pack(side=tk.TOP)
+        self.btn_frm = tk.LabelFrame(self, text='Выбор действия')
+        self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
         # Buttons for the new windows
-        self.ml_window_btn = tk.Button(self, text='Открыть окно классификации', command=self.open_ml)
-        self.ml_window_btn.pack(side=tk.BOTTOM)
-        self.table_open_btn = tk.Button(self, text='Открыть окно обзора данных', command=self.open_table)
-        self.table_open_btn.pack(side=tk.BOTTOM)
-        self.data_btn = tk.Button(self, text='Открыть окно редактирования данных', command=self.open_data)
-        self.data_btn.pack(side=tk.BOTTOM)
+        self.ml_window_btn = tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18,
+                                       padx=10, pady=10)
+        self.ml_window_btn.pack(side=tk.RIGHT)
+        self.table_open_btn = tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18,
+                                        padx=10, pady=10)
+        self.table_open_btn.pack(side=tk.RIGHT)
+        self.data_btn = tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18,
+                                  padx=10, pady=10)
+        self.data_btn.pack(side=tk.RIGHT)
 
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
@@ -120,21 +124,24 @@ class BottomFrame(tk.LabelFrame):
         tk.LabelFrame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.file_path = ''
+        self.configure(bg='#abcdef', text='Загрузка данных')
 
-        self.file_path_lbl = tk.Label(self, text='File path: \n' + self.file_path)
+        self.btn_frm = tk.Frame(self, bg='#abcdef')
+        self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X)
+
+        self.file_path_lbl = tk.Label(self, text='Путь к файлу: \n' + self.file_path, bg='#abcdef')
         self.file_path_lbl.pack(anchor=tk.N)
 
-        self.file_open_button = tk.Button(self, text='File Upload',
-                                          command=self.open_file)
-        self.file_open_button.pack(anchor=tk.SE)
+        self.file_open_button = tk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=18)
+        self.file_open_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        self.db_create_button = tk.Button(self, text='Add table to Tasks',
-                                          command=self.input_table)
-        self.db_create_button.pack(anchor=tk.SE)
+        self.db_create_button = tk.Button(self.btn_frm, text='Добавить в таблицу Tasks', command=self.input_table,
+                                          width=18)
+        self.db_create_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
         self.db_create_info = tk.StringVar()
-        self.db_create_info.set('Please, enter table name:')
-        tk.Label(self, textvariable=self.db_create_info).pack(anchor=tk.S)
+        self.db_create_info.set('Введите название данных:')
+        tk.Label(self, textvariable=self.db_create_info, bg='#abcdef').pack(anchor=tk.S)
 
         self.table_name = tk.StringVar()
         self.table_name_entry = tk.Entry(self, textvariable=self.table_name)
@@ -154,7 +161,7 @@ class BottomFrame(tk.LabelFrame):
 
     def open_file(self):
         self.file_path = askopenfile(mode='r').name
-        self.file_path_lbl['text'] = 'File path: \n' + self.file_path
+        self.file_path_lbl['text'] = 'Путь к файлу: \n' + self.file_path
 
     def input_table(self):
         conn = sqlite3.connect('main.sqlite3')
@@ -169,9 +176,9 @@ class BottomFrame(tk.LabelFrame):
                             (name, file))
                 conn.commit()
         except ValueError:
-            self.db_create_info.set('Enter table name first!')
+            self.db_create_info.set('Введите название таблицы!')
         except FileNotFoundError:
-            self.db_create_info.set('Upload the file first!')
+            self.db_create_info.set('Сначала загрузите файл!')
         finally:
             cur.close()
             conn.close()
