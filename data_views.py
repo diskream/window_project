@@ -239,9 +239,12 @@ class AddWindow(tk.Tk):
     def __init__(self, entry, pd_data, parent, width, height):
         tk.Tk.__init__(self)
 
-        self.geometry(f'{int(width*1.2)}x{int(height*1.2)}')
+        self.geometry(f'{int(width * 1.2)}x{int(height * 1.2)}')
         self.entry = entry
         self.title('Добавление колонки в данные ' + self.entry.name)
+        self.pd_data = pd_data
+        self.columns = list(self.pd_data.columns)
+        self.parent = parent
         # Разделение окна на таблицу и область действий
         self.table_frm = tk.Frame(self)
         self.table_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -249,7 +252,6 @@ class AddWindow(tk.Tk):
         self.buttons_frm.pack(side=tk.BOTTOM, fill=tk.X)
         self.action_frm = tk.Frame(self, bg='#abcdef')
         self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
-
         # Добавление областей для скроллбаров
         self.tv1_frm = tk.Frame(self.table_frm)
         self.tv1_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -280,11 +282,79 @@ class AddWindow(tk.Tk):
         self.add_frm_6.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
         tk.Button(self.buttons_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
         tk.Button(self.buttons_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
+        # Добавление элементов в фрейм 1
+        for frm in [self.add_frm_1, self.add_frm_2, self.add_frm_3, self.add_frm_4, self.add_frm_5, self.add_frm_6]:
+            tk.Label(frm, text='Введите название новой колонки:', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
+                                                                                     padx=5, pady=5)
+        self.ent_1 = tk.Entry(self.add_frm_1, width=30)
+        self.ent_2 = tk.Entry(self.add_frm_2, width=30)
+        self.ent_3 = tk.Entry(self.add_frm_3, width=30)
+        self.ent_4 = tk.Entry(self.add_frm_4, width=30)
+        self.ent_5 = tk.Entry(self.add_frm_5, width=30)
+        self.ent_6 = tk.Entry(self.add_frm_6, width=30)
+        # расположение элементов
+        self.ent_1.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.ent_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.ent_3.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.ent_4.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.ent_5.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.ent_6.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        # Кнопки сохранения
+        tk.Button(self.add_frm_1, text='Добавить', command=self.comm1).pack(side=tk.BOTTOM, padx=5, pady=5)
+        tk.Button(self.add_frm_2, text='Добавить', command=self.comm2).pack(side=tk.BOTTOM, padx=5, pady=5)
+        tk.Button(self.add_frm_3, text='Добавить', command=self.comm3).pack(side=tk.BOTTOM, padx=5, pady=5)
+        tk.Button(self.add_frm_4, text='Добавить', command=self.comm4).pack(side=tk.BOTTOM, padx=5, pady=5)
+        tk.Button(self.add_frm_5, text='Добавить', command=self.comm5).pack(side=tk.BOTTOM, padx=5, pady=5)
+        tk.Button(self.add_frm_6, text='Добавить', command=self.comm6).pack(side=tk.BOTTOM, padx=5, pady=5)
+        # При создании новой колонки используется как минимум одна старая
+        tk.Label(self.add_frm_1, text='Выберите колонку с Timestamp', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
+                                                                                         padx=5)
+        tk.Label(self.add_frm_2, text='Выберите колонку с DateTime', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
+                                                                                        padx=5)
+        tk.Label(self.add_frm_3, text='Выберите первую колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5)
+        tk.Label(self.add_frm_4, text='Выберите первую колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5)
+        tk.Label(self.add_frm_5, text='Выберите колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5, )
+        tk.Label(self.add_frm_6, text='Выберите колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5)
+        # Combobox
+        self.cb_1 = ttk.Combobox(self.add_frm_1, values=self.columns)
+        self.cb_2 = ttk.Combobox(self.add_frm_2, values=self.columns)
+        self.cb_3 = ttk.Combobox(self.add_frm_3, values=self.columns)
+        self.cb_4 = ttk.Combobox(self.add_frm_4, values=self.columns)
+        self.cb_5 = ttk.Combobox(self.add_frm_5, values=self.columns)
+        self.cb_6 = ttk.Combobox(self.add_frm_6, values=self.columns)
+        # Расположение Combobox
+        self.cb_1.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.cb_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.cb_3.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.cb_4.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.cb_5.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        self.cb_6.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        #
+
+    def comm1(self):
+        print(self.ent_1.get())
+
+    def comm2(self):
+        print(self.ent_2.get())
+
+    def comm3(self):
+        print(self.ent_3.get())
+
+    def comm4(self):
+        print(self.ent_4.get())
+
+    def comm5(self):
+        print(self.ent_5.get())
+
+    def comm6(self):
+        print(self.ent_6.get())
 
     def save(self):
         pass
+
     def cancel(self):
         pass
+
 
 class DataPreparation(tk.Tk):
     def __init__(self, entry, pd_data, parent, width=None, height=None):
