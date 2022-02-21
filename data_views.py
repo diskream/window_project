@@ -68,18 +68,17 @@ class DataView(tk.Tk):
                                                                                             padx=20)
 
     def data_preparation(self):
-        DataPreparation(self.entry, self.pd_data, self.WIDTH, self.HEIGHT)
+        DataPreparation(self.entry, self.pd_data, self, self.WIDTH, self.HEIGHT)
 
     def del_column(self):
         """
         Открывает окно с действиями для удаления колонок
         :return:
         """
-        DeleteWindow('Удаление колонки', self.HEIGHT, self.entry, self.table, self.data, self.pd_data)
-        self.destroy()
+        DeleteWindow(self.entry, self.pd_data, self, self.HEIGHT)
 
     def add_column(self):
-        AddWindow(self.entry)
+        AddWindow(self.entry, self.pd_data, self, self.WIDTH, self.HEIGHT)
 
     def empty_data(self):
         pass
@@ -111,24 +110,24 @@ class DataView(tk.Tk):
             else:
                 return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
 
+    def close(self):
+        self.destroy()
+
 
 class DeleteWindow(tk.Tk):
     """
     Окно с действиями для удаления колонок
     """
 
-    # в __init__ передается слишком много аргументов - исправить
-    def __init__(self, title, height, entry, table, data, pd_data, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+    def __init__(self, entry, pd_data, parent, height):
+        tk.Tk.__init__(self)
 
         self.geometry('500x500')
-        self.title(f'{title}')
-
+        self.parent = parent
         self.HEIGHT = height
         self.entry = entry
-        self.table = table  # название таблицы в БД
-        self.data = data  # название данных
         self.pd_data = pd_data  # данные в формате Dataframe
+        self.title(f'{self.entry.name}')
         self.columns_to_delete = list()  # список выбранных колонок для удаления
         # создание фреймов для удобного размещения элементов
         lb_frm = tk.Frame(self)
@@ -181,20 +180,14 @@ class DeleteWindow(tk.Tk):
         :return:
         """
         self.pd_data = self.pd_data.drop(self.columns_to_delete, axis=1)
-        if self.entry.table == 'Task_variant':
-            data = [self.entry.task_id, None, self.entry.name, serialize(self.pd_data)]
-        else:
-            data = [self.entry.task_id, self.entry.name, serialize(self.pd_data)]
-        out = dict(zip(self.entry.columns, data))
-        DataView(self.HEIGHT, get_entry('Task_variant', **upload_data('Task_variant', **out)))
-        self.destroy()
+        DataView.destroy(self.parent)
+        save_to_db(self)
 
     def cancel(self):
         """
         Закрывает окно удаления и возвращает окно редактирования
         :return:
         """
-        DataView(self.HEIGHT, self.entry)
         self.destroy()
 
 
@@ -232,39 +225,140 @@ class DescriptionWindow(tk.Tk):
 
 
 class AddWindow(tk.Tk):
-    def __init__(self, entry):
+    """
+    Возможные варианты добавления:
+    1. Перевод timestamp -> datetime
+    2. Datetime -> date / time
+    3. Колонка1 = / >= / <= / > / < Колонка2
+    4. Колонка3 = Колонка1 * / "/" / - / + Колонка2
+    5. Колонка2 = % от Колонки1
+    6. Колонка1 * / "/" / - / + Число
+
+    """
+
+    def __init__(self, entry, pd_data, parent, width, height):
         tk.Tk.__init__(self)
 
-        self.geometry('500x500')
+        self.geometry(f'{int(width*1.2)}x{int(height*1.2)}')
         self.entry = entry
         self.title('Добавление колонки в данные ' + self.entry.name)
+        # Разделение окна на таблицу и область действий
+        self.table_frm = tk.Frame(self)
+        self.table_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.buttons_frm = tk.Frame(self, bg='#abcdef')
+        self.buttons_frm.pack(side=tk.BOTTOM, fill=tk.X)
+        self.action_frm = tk.Frame(self, bg='#abcdef')
+        self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
 
+        # Добавление областей для скроллбаров
+        self.tv1_frm = tk.Frame(self.table_frm)
+        self.tv1_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.tv2_frm = tk.Frame(self.table_frm, height=10)
+        self.tv2_frm.pack(side=tk.TOP, fill=tk.X)
+        # Инициализация таблицы
+        self.tv = ttk.Treeview(self.tv1_frm, show='headings')
+        # Переменные для функции show_table()
+        self.table = entry.table
+        if isinstance(self.entry.name, tuple):
+            self.entry.name = self.entry.name[0]
+        self.data = self.entry.name
+        # Отрисовка таблицы
+        show_table(self)
+        # Добавление 6 фреймов
+        self.add_frm_1 = tk.LabelFrame(self.action_frm, text='Перевод Timestamp', bg='#abcdef')
+        self.add_frm_2 = tk.LabelFrame(self.action_frm, text='Разбиение DateTime', bg='#abcdef')
+        self.add_frm_3 = tk.LabelFrame(self.action_frm, text='Сравнение 2 колонок', bg='#abcdef')
+        self.add_frm_4 = tk.LabelFrame(self.action_frm, text='Вычисляемая колонка из 2', bg='#abcdef')
+        self.add_frm_5 = tk.LabelFrame(self.action_frm, text='Вычисляемая колонка как %', bg='#abcdef')
+        self.add_frm_6 = tk.LabelFrame(self.action_frm, text='Вычисляемая колонка из числа', bg='#abcdef')
+        # Расположение фреймов
+        self.add_frm_1.pack(side=tk.LEFT, anchor=tk.N, fill=tk.BOTH, expand=1)
+        self.add_frm_2.pack(side=tk.LEFT, anchor=tk.N, fill=tk.BOTH, expand=1)
+        self.add_frm_3.pack(side=tk.LEFT, anchor=tk.N, fill=tk.BOTH, expand=1)
+        self.add_frm_4.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
+        self.add_frm_5.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
+        self.add_frm_6.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
+        tk.Button(self.buttons_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
+        tk.Button(self.buttons_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
+
+    def save(self):
+        pass
+    def cancel(self):
+        pass
 
 class DataPreparation(tk.Tk):
-    def __init__(self, entry, pd_data, width, height):
+    def __init__(self, entry, pd_data, parent, width=None, height=None):
         tk.Tk.__init__(self)
 
-        self.geometry(f'{width}x{height}')
+        self.HEIGHT = height
+        self.parent = parent
+        # self.geometry(f'{width}x{height}')
+        self.geometry('500x500')
         self.entry = entry
         self.title('Преобразование данных ' + self.entry.name)
+        self.is_edited = False
 
         self.pd_data = pd_data
-        self.action_frm = tk.Frame(self, bg='blue')
+        self.action_frm = tk.LabelFrame(self, text='Проеобразование данных в тип int', bg='#abcdef')
         self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
         self.lbl_frm = tk.LabelFrame(self, text='Информация о данных')
         self.lbl_frm.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
-        self.lb_frm = tk.Frame(self, bg='red')
+        self.lb_frm = tk.LabelFrame(self, text='Выбор колонок для преобразования')
         self.lb_frm.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
         self.info_lbl = tk.Label(self.lbl_frm, text='', justify=tk.LEFT)
-        self.info_lbl.pack()
+        self.info_lbl.pack(side=tk.LEFT)
+        self.columns_lb = tk.Listbox(self.lb_frm, selectmode=tk.EXTENDED)
+        self.n_unique = {}
+        self.get_lb()
+        self.columns_lb.pack(fill=tk.BOTH, expand=1)
 
+        tk.Button(self.action_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, anchor=tk.S,
+                                                                                      padx=10, pady=10)
+        tk.Button(self.action_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, anchor=tk.S,
+                                                                                       padx=10, pady=10)
+        tk.Button(self.action_frm, text='Преобразовать', command=self.convert_data).pack(side=tk.TOP, anchor=tk.W,
+                                                                                         padx=10, pady=10)
         self.get_info()
+
+    def convert_data(self):
+        cols = []  # названия колонок для преобразования
+        columns = self.columns_lb.curselection()  # индексы колонок для преобразования
+        for column in columns:
+            cols.append(self.columns_lb.get(column))
+        if len(cols) == 0:
+            pass  # TODO: добавить уведомление, что не выбрана ни 1 колонка
+        else:
+            self.pd_data = obj_to_int(self.pd_data, cols=cols)
+            self.columns_lb.delete(0, tk.END)
+            self.get_lb()
+            self.get_info()
+            self.is_edited = True
 
     def get_info(self):
         buf = io.StringIO()
         self.pd_data.info(buf=buf)
-        self.info_lbl.configure(text=buf.getvalue())
+        s = '\nКоличество уникальных значений\n'
+        for key, value in self.n_unique.items():
+            s += (str(key) + ': ' + str(value) + '\n')
+        self.info_lbl.configure(text=buf.getvalue() + s[:-2])
+
+    def get_lb(self):
+        self.n_unique = {}
+        for col in self.pd_data.columns:
+            if self.pd_data[col].dtype not in ['int64', 'float64']:
+                self.columns_lb.insert(tk.END, col)
+                self.n_unique[col] = self.pd_data[col].nunique()
+
+    def save(self):
+        if self.is_edited:
+            DataView.destroy(self.parent)
+            save_to_db(self)
+        else:
+            self.cancel()
+
+    def cancel(self):
+        self.destroy()
 
 
 # получаем словарь со всеми колонками типа object и их уникальными значениями
@@ -290,3 +384,13 @@ def obj_to_int(df, length=100, cols=None):
     for key, value in obj_dict.items():
         df[key] = df[key].replace(value)
     return df
+
+
+def save_to_db(method):
+    if method.entry.table == 'Task_variant':
+        data = [method.entry.task_id, None, method.entry.name, serialize(method.pd_data)]
+    else:
+        data = [method.entry.task_id, method.entry.name, serialize(method.pd_data)]
+    out = dict(zip(method.entry.columns, data))
+    DataView(method.HEIGHT, get_entry('Task_variant', **upload_data('Task_variant', **out)))
+    method.destroy()
