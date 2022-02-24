@@ -42,17 +42,17 @@ def get_data(method):
         conn.close()
 
 
-def show_table(method, sb_place=None):
+def show_table(method, sb_configure=True, pd_data=None):
     """
     Отображает таблицу
     :param method: используется для ссылки на self. Нужно для использования разными классами
-    :param sb_place: место расположения скроллбара
+    :param pd_data: если нужно обновить таблицу из DataFrame
     :return:
     """
     column_width = 100
     i = 0  # итератор для чередования цветов записей в таблице
     if method.table is not None:
-        data = get_data(method)
+        data = get_data(method) if pd_data is None else pd_data
         method.tv['columns'] = list(data.columns)
         for column in method.tv['columns']:
             method.tv.heading(column, text=column, command=lambda: treeview_sort_column(method.tv, column, False))
@@ -79,14 +79,14 @@ def show_table(method, sb_place=None):
 
     method.tv.tag_configure('even', background='#E8E8E8')
     method.tv.tag_configure('odd', background='#DFDFDF')
-    if sb_place is None:
+    if sb_configure:
         ysb = ttk.Scrollbar(method.tv1_frm, orient=tk.VERTICAL, command=method.tv.yview)
         xsb = ttk.Scrollbar(method.tv2_frm, orient=tk.HORIZONTAL, command=method.tv.xview)
-
-    method.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
-    ysb.pack(side=tk.RIGHT, fill=tk.Y)
+        method.tv.configure(yscroll=ysb.set, xscroll=xsb.set)
+        ysb.pack(side=tk.RIGHT, fill=tk.Y)
+        xsb.pack(side=tk.BOTTOM, fill=tk.X)
     method.tv.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-    xsb.pack(side=tk.BOTTOM, fill=tk.X)
+
 
     # def get_cols(self):
     #     # getting columns from table

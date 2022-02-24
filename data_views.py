@@ -235,7 +235,7 @@ class AddWindow(tk.Tk):
     6. Колонка1 * / "/" / - / + Число
     Функции не ловят испключения. Если будет время - добавить проверку исключений.
     """
-
+    # TODO: функциональная часть работает, но нужно сделать отлов исключений
     def __init__(self, entry, pd_data, parent, width, height):
         tk.Tk.__init__(self)
 
@@ -349,7 +349,7 @@ class AddWindow(tk.Tk):
         self.cb_4_2 = ttk.Combobox(self.add_frm_4, values=self.columns)
         self.cb_4_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         tk.Label(self.add_frm_4, text='Выберите оператор:', bg='#abcdef', padx=5).pack(side=tk.TOP,
-                                                                                                 anchor=tk.W)
+                                                                                       anchor=tk.W)
         self.oper_cb = ttk.Combobox(self.add_frm_4, values=['+', '-', '*', '/', '%'])
         self.oper_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Вычисление процента
@@ -357,10 +357,36 @@ class AddWindow(tk.Tk):
                                                                                              anchor=tk.W)
         self.cb_5_2 = ttk.Combobox(self.add_frm_5, values=self.columns)
         self.cb_5_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        # Вычисление колонки из числа
+        tk.Label(self.add_frm_6, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                             anchor=tk.W)
+        self.ent_6_2 = tk.Entry(self.add_frm_6)
+        self.ent_6_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        tk.Label(self.add_frm_6, text='Выберите оператор:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                       anchor=tk.W)
+        self.oper2_cb = ttk.Combobox(self.add_frm_6, values=['+', '-', '*', '/', '%'])
+        self.oper2_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
 
+    def _refresh_table(fn):
+        """
+        Функция-декоратор. PyCharm жалуется на аргументы. Я пока что не знаю, что с этим сделать,
+        но оно работает и работает хорошо.
+        Данный декораторобновляет таблицу.
+        :return:
+        """
+
+        def wrapped(self):
+            fn(self)
+            self.tv.delete(*self.tv.get_children())
+            show_table(self, pd_data=self.pd_data, sb_configure=False)
+        return wrapped
+
+
+    @_refresh_table
     def comm1(self):
         self.pd_data[self.ent_1.get()] = pd.to_datetime(self.pd_data[self.cb_1], unit='s')
 
+    @_refresh_table
     def comm2(self):
         name = self.ent_2.get()
         column = self.cb_2.get()
@@ -377,10 +403,11 @@ class AddWindow(tk.Tk):
         except AttributeError:
             self.pd_data[column].to_datetime()
 
+    @_refresh_table
     def comm3(self):
         name = self.ent_3.get()
-        col1 = self.cb_3.get()
-        col2 = self.cb_3_2.get()
+        col1 = self.pd_data[self.cb_3.get()]
+        col2 = self.pd_data[self.cb_3_2.get()]
         op = self.comp_cb.get()
         if op == '==':
             self.pd_data[name] = col1 == col2
@@ -393,10 +420,11 @@ class AddWindow(tk.Tk):
         elif op == '<=':
             self.pd_data[name] = col1 <= col2
 
+    @_refresh_table
     def comm4(self):
         name = self.ent_4.get()
-        col1 = self.cb_4.get()
-        col2 = self.cb_4_2.get()
+        col1 = self.pd_data[self.cb_4.get()]
+        col2 = self.pd_data[self.cb_4_2.get()]
         op = self.oper_cb.get()
         if op == '+':
             self.pd_data[name] = col1 + col2
@@ -409,21 +437,30 @@ class AddWindow(tk.Tk):
         elif op == '%':
             self.pd_data[name] = col1 % col2
 
+    @_refresh_table
     def comm5(self):
         name = self.ent_5.get()
-        col1 = self.cb_5.get()
-        col2 = self.cb_5_2.get()
-        try:
-            col1 = int(col1)
-            col2 = int(col2)
-            greater = col1 if col1 > col2 else col2
-            less = col1 if col1 < col2 else col2
-            self.pd_data[name] = (greater / less) * 100
-        except ValueError as _ex:
-            print(_ex)
+        col1 = self.pd_data[self.cb_5.get()]
+        col2 = self.pd_data[self.cb_5_2.get()]
+        self.pd_data[name] = (col1 / col2) * 100
+        self.pd_data[name] = self.pd_data[name].astype(int)
 
+    @_refresh_table
     def comm6(self):
-        print(self.ent_6.get())
+        name = self.ent_6.get()
+        col1 = self.pd_data[self.cb_6.get()]
+        col2 = float(self.ent_6_2.get())
+        op = self.oper2_cb.get()
+        if op == '+':
+            self.pd_data[name] = col1.apply(lambda x: x + col2)
+        elif op == '-':
+            self.pd_data[name] = col1.apply(lambda x: x - col2)
+        elif op == '*':
+            self.pd_data[name] = col1.apply(lambda x: x * col2)
+        elif op == '/':
+            self.pd_data[name] = col1.apply(lambda x: x / col2)
+        elif op == '%':
+            self.pd_data[name] = col1.apply(lambda x: x % col2)
 
     def save(self):
         pass

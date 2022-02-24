@@ -22,19 +22,16 @@ class TopFrame(tk.Frame):
         self.db = get_db()
         self.insert_tv(self.db)
 
-        tk.Button(self, text='Обновить таблицу', command=self.update_table, pady=10).pack(side=tk.TOP)
+        tk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP, pady=10)
         self.btn_frm = tk.LabelFrame(self, text='Выбор действия')
         self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
         # Buttons for the new windows
-        self.ml_window_btn = tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18,
-                                       padx=10, pady=10)
-        self.ml_window_btn.pack(side=tk.RIGHT)
-        self.table_open_btn = tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18,
-                                        padx=10, pady=10)
-        self.table_open_btn.pack(side=tk.RIGHT)
-        self.data_btn = tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18,
-                                  padx=10, pady=10)
-        self.data_btn.pack(side=tk.RIGHT)
+        self.ml_window_btn = tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18)
+        self.ml_window_btn.pack(side=tk.RIGHT, padx=10, pady=10, anchor=tk.W)
+        self.table_open_btn = tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18)
+        self.table_open_btn.pack(side=tk.RIGHT, padx=10, pady=10)
+        self.data_btn = tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18)
+        self.data_btn.pack(side=tk.RIGHT, padx=10, pady=10)
 
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
