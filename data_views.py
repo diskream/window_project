@@ -233,7 +233,7 @@ class AddWindow(tk.Tk):
     4. Колонка3 = Колонка1 * / "/" / - / + Колонка2
     5. Колонка2 = % от Колонки1
     6. Колонка1 * / "/" / - / + Число
-
+    Функции не ловят испключения. Если будет время - добавить проверку исключений.
     """
 
     def __init__(self, entry, pd_data, parent, width, height):
@@ -329,22 +329,98 @@ class AddWindow(tk.Tk):
         self.cb_4.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         self.cb_5.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         self.cb_6.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
-        #
+        # Работа с Datetime
+        tk.Label(self.add_frm_2, text='Выберите тип новой колонки:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                                anchor=tk.W)
+        self.dt_cb = ttk.Combobox(self.add_frm_2, values=['Год', 'Месяц', 'День'])
+        self.dt_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        # Сравнение колонок
+        tk.Label(self.add_frm_3, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                             anchor=tk.W)
+        self.cb_3_2 = ttk.Combobox(self.add_frm_3, values=self.columns)
+        self.cb_3_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        tk.Label(self.add_frm_3, text='Выберите оператор сравнения:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                                 anchor=tk.W)
+        self.comp_cb = ttk.Combobox(self.add_frm_3, values=['==', '>', '<', '>=', '<='])
+        self.comp_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        # Вычисление из двух колонок
+        tk.Label(self.add_frm_4, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                             anchor=tk.W)
+        self.cb_4_2 = ttk.Combobox(self.add_frm_4, values=self.columns)
+        self.cb_4_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        tk.Label(self.add_frm_4, text='Выберите оператор:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                                 anchor=tk.W)
+        self.oper_cb = ttk.Combobox(self.add_frm_4, values=['+', '-', '*', '/', '%'])
+        self.oper_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
+        # Вычисление процента
+        tk.Label(self.add_frm_5, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+                                                                                             anchor=tk.W)
+        self.cb_5_2 = ttk.Combobox(self.add_frm_5, values=self.columns)
+        self.cb_5_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
 
     def comm1(self):
-        print(self.ent_1.get())
+        self.pd_data[self.ent_1.get()] = pd.to_datetime(self.pd_data[self.cb_1], unit='s')
 
     def comm2(self):
-        print(self.ent_2.get())
+        name = self.ent_2.get()
+        column = self.cb_2.get()
+        dt = self.dt_cb.get()
+        # Завернуть объекты Datetime в словарь и по ключу брать значения не получилось -
+        # Придется писать if'ами...
+        try:
+            if dt == 'Год':
+                self.pd_data[name] = self.pd_data[column].dt.year
+            elif dt == 'Месяц':
+                self.pd_data[name] = self.pd_data[column].dt.month
+            elif dt == 'Год':
+                self.pd_data[name] = self.pd_data[column].dt.day
+        except AttributeError:
+            self.pd_data[column].to_datetime()
 
     def comm3(self):
-        print(self.ent_3.get())
+        name = self.ent_3.get()
+        col1 = self.cb_3.get()
+        col2 = self.cb_3_2.get()
+        op = self.comp_cb.get()
+        if op == '==':
+            self.pd_data[name] = col1 == col2
+        elif op == '>':
+            self.pd_data[name] = col1 > col2
+        elif op == '<':
+            self.pd_data[name] = col1 < col2
+        elif op == '>=':
+            self.pd_data[name] = col1 >= col2
+        elif op == '<=':
+            self.pd_data[name] = col1 <= col2
 
     def comm4(self):
-        print(self.ent_4.get())
+        name = self.ent_4.get()
+        col1 = self.cb_4.get()
+        col2 = self.cb_4_2.get()
+        op = self.oper_cb.get()
+        if op == '+':
+            self.pd_data[name] = col1 + col2
+        elif op == '-':
+            self.pd_data[name] = col1 - col2
+        elif op == '*':
+            self.pd_data[name] = col1 * col2
+        elif op == '/':
+            self.pd_data[name] = col1 / col2
+        elif op == '%':
+            self.pd_data[name] = col1 % col2
 
     def comm5(self):
-        print(self.ent_5.get())
+        name = self.ent_5.get()
+        col1 = self.cb_5.get()
+        col2 = self.cb_5_2.get()
+        try:
+            col1 = int(col1)
+            col2 = int(col2)
+            greater = col1 if col1 > col2 else col2
+            less = col1 if col1 < col2 else col2
+            self.pd_data[name] = (greater / less) * 100
+        except ValueError as _ex:
+            print(_ex)
 
     def comm6(self):
         print(self.ent_6.get())
