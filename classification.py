@@ -3,12 +3,67 @@ from tkinter import ttk
 import sqlite3
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from functions import serialize, deserialize
+from functions import serialize, deserialize, update_entry
 
 
 class MLView(tk.Tk):
-    def __init__(self, table, data, *args, **kwargs):
-        tk.Tk.__init__(self, *args, **kwargs)
+    def __init__(self, entry):
+        tk.Tk.__init__(self)
+        self.geometry('500x500')
+        self.entry = entry
+        update_entry(self.entry)
+        self.pd_data = deserialize(self.entry.table_file)
+        self.upper_frm = tk.LabelFrame(self, text='Выбор алгоритма')
+        self.upper_frm.pack(side=tk.TOP, fill=tk.X)
+        self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево реешений',
+                                                           'Случайный лес',
+                                                           'k Ближайших соседей'],
+                                   )
+        self.alg_cb.current(0)
+        self.alg_cb.pack(side=tk.TOP, pady=10)
+        tk.Button(self.upper_frm, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
+        self.update_title()
+        self.dt_frm = DecisionTreeFrame(self)
+        self.rf_frm = RandomForestFrame(self)
+        self.knn_frm = KNeighborsFrame(self)
+        self.algs = {
+            'Дерево реешений': self.dt_frm,
+            'Случайный лес': self.rf_frm,
+            'k Ближайших соседей': self.knn_frm
+        }
+        self.get_alg()
+
+    def update_title(self):
+        self.title(f'Работа с {self.entry.name} с помощью алгоритма "{self.alg_cb.get()}"')
+
+    def get_alg(self):
+        alg = self.alg_cb.get()
+        self.title(f'Работа с {self.entry.name} с помощью алгоритма "{alg}"')
+        self.algs[alg].pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+
+class DecisionTreeFrame(tk.Frame):
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        tk.Label(self, text='Decision Tree').pack()
+
+
+class RandomForestFrame(tk.Frame):
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        tk.Label(self, text='Random Forest').pack()
+
+
+class KNeighborsFrame(tk.Frame):
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
+        tk.Label(self, text='k Nearest Neighbors').pack()
+        self.clf = DecisionTreeClassifier
+
+
+class MLViewOld(tk.Tk):
+    def __init__(self, table, data):
+        tk.Tk.__init__(self)
         self.geometry('500x530')
         self.resizable(width=False, height=False)
         self.table = table[0]

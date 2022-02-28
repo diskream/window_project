@@ -10,7 +10,6 @@ from data_views import DataView
 from functions import serialize, get_db
 
 
-
 class TopFrame(tk.Frame):
     def __init__(self, master, *args, **kwargs):
         tk.Frame.__init__(self, master, *args, **kwargs)
@@ -75,7 +74,10 @@ class TopFrame(tk.Frame):
     def open_ml(self):
         table = self.tv_hier.item(self.tv_hier.selection())
         if self.table_check(table):
-            MLView(data=table['text'], table=table['tags'])
+            s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
+            entry = json.loads(s)
+            MLView(self.get_entry(entry['table'], entry['task_id'],
+                                  entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_data(self):
         table = self.tv_hier.item(self.tv_hier.selection())
@@ -103,6 +105,7 @@ class TopFrame(tk.Frame):
     def update_table(self):
         self.tv_hier.delete(*self.tv_hier.get_children())
         self.insert_tv(get_db())
+
     @staticmethod
     def get_tables_list():
         conn = sqlite3.connect('main.sqlite3')
