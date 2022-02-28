@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import sqlite3
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
@@ -49,7 +49,6 @@ class MLView(tk.Tk):
 class DecisionTreeFrame(tk.Frame):
     def __init__(self, parent, entry, pd_data):
         tk.Frame.__init__(self, parent)
-        self.clf = DecisionTreeClassifier
         self.entry = entry
         self.pd_data = pd_data
         self.clf_conf_lb_frm = tk.LabelFrame(self, text='Конфигурация дерева решений')
@@ -70,14 +69,17 @@ class DecisionTreeFrame(tk.Frame):
             'min_weight_fraction_leaf': tk.StringVar(self.clf_conf_frm, value=0.0),
             'random_state': tk.StringVar(self.clf_conf_frm, value='None')
         }
-        info = '''
-        criterion: [gini, entropy]; max_depth: максимальная глубина дерева,
-        min_samples_split: минимальное количество объектов для разделения внутри узла;
-        min_samples_leaf: минимальное количество объектов для разделения внутри листа;
-        min_weight_fraction_leaf: минимальный вес узла; 
-        random_state: управляет случайностью оценки.
-        '''
-        tk.Label(self.clf_conf_lb_frm, text='\tПараметры классификатора:' + info, justify=tk.LEFT).pack(side=tk.TOP)
+        self.params = {}
+        info = '  Параметры классификатора:\n' + \
+               '- criterion: [gini, entropy]; max_depth: максимальная глубина дерева,\n' + \
+               '- min_samples_split: минимальное количество объектов для разделения внутри узла;\n' + \
+               '- min_samples_leaf: минимальное количество объектов для разделения внутри листа;\n' + \
+               '- min_weight_fraction_leaf: минимальный вес узла;\n' + \
+               '- random_state: управляет случайностью оценки.'
+
+        tk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
+                  command=lambda: messagebox.showinfo('Информация о параметрах', info)).pack(
+            side=tk.TOP)
         ent_options = {
             'width': 15,
             'justify': tk.CENTER
@@ -110,7 +112,6 @@ class DecisionTreeFrame(tk.Frame):
         self.random_state_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
                                          **ent_options)
         self.random_state_ent.grid(row=3, column=2, padx=5, pady=10)
-
         model_pack = {
             'side': tk.TOP,
             'padx': 5,
@@ -122,7 +123,53 @@ class DecisionTreeFrame(tk.Frame):
         tk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
-        tk.Button(self.model_frm_l, text='Подтвердить').pack(**model_pack)
+        self.check_var = tk.IntVar()
+        self.check_split = ttk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
+                                           variable=self.check_var,onvalue=1, offvalue=0)
+        self.check_split.pack(**model_pack)
+        tk.Button(self.model_frm_l, text='Подтвердить', command=self.fit).pack(**model_pack)
+
+    def fit(self):
+        clf = self.get_clf()
+        if self.check_var.get() == 1:
+            x_train, x_test, y_train, y_test = self.get_split_data()
+            clf.fit(x_train, y_train)
+            print(clf.score(x_test, y_test))
+        else:
+            x, y = self.get_split_data()
+            clf.fit(x, y)
+            print(clf.score(x, y))
+
+    def get_split_data(self):
+        target = self.col_cb.get()
+        x = self.pd_data.drop(target, axis=1)
+        y = self.pd_data[target]
+        if self.check_var.get() == 1:
+            percent = float(self.split_sb.get()) / 100
+            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=percent)
+            return x_train, x_test, y_train, y_test
+        else:
+            return x, y
+
+    def get_clf(self):
+        params = self.get_params()
+        return DecisionTreeClassifier(**params)
+
+    def get_params(self):
+        ent_obj = [self.criterion_ent, self.max_depth_ent, self.min_samples_split_ent, self.min_samples_leaf_ent,
+                   self.min_weight_fraction_leaf_ent, self.random_state_ent]
+        params = {}
+        for param, obj in zip(self.default_params.keys(), ent_obj):
+            if obj.get() == 'None':
+                params[param] = None
+            elif param == 'min_weight_fraction_leaf':
+                params[param] = float(obj.get())
+            else:
+                try:
+                    params[param] = int(obj.get())
+                except ValueError:
+                    params[param] = obj.get()
+        return params
 
 
 class RandomForestFrame(tk.Frame):
