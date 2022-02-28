@@ -22,8 +22,10 @@ class TopFrame(tk.Frame):
         self.insert_tv(self.db)
 
         tk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP, pady=10)
-        self.btn_frm = tk.LabelFrame(self, text='Выбор действия')
-        self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        self.btn_lb_frm = tk.LabelFrame(self, text='Выбор действия')
+        self.btn_lb_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        self.btn_frm = tk.Frame(self.btn_lb_frm)
+        self.btn_frm.pack()
         # Buttons for the new windows
         self.ml_window_btn = tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18)
         self.ml_window_btn.pack(side=tk.RIGHT, padx=10, pady=10, anchor=tk.W)

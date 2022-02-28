@@ -15,7 +15,7 @@ class MLView(tk.Tk):
         self.pd_data = deserialize(self.entry.table_file)
         self.upper_frm = tk.LabelFrame(self, text='Выбор алгоритма')
         self.upper_frm.pack(side=tk.TOP, fill=tk.X)
-        self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево реешений',
+        self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево решений',
                                                            'Случайный лес',
                                                            'k Ближайших соседей'],
                                    )
@@ -23,14 +23,15 @@ class MLView(tk.Tk):
         self.alg_cb.pack(side=tk.TOP, pady=10)
         tk.Button(self.upper_frm, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
         self.update_title()
-        self.dt_frm = DecisionTreeFrame(self)
+        self.dt_frm = DecisionTreeFrame(self, self.entry, self.pd_data)
         self.rf_frm = RandomForestFrame(self)
         self.knn_frm = KNeighborsFrame(self)
         self.algs = {
-            'Дерево реешений': self.dt_frm,
+            'Дерево решений': self.dt_frm,
             'Случайный лес': self.rf_frm,
             'k Ближайших соседей': self.knn_frm
         }
+        self.current_alg = None
         self.get_alg()
 
     def update_title(self):
@@ -39,13 +40,89 @@ class MLView(tk.Tk):
     def get_alg(self):
         alg = self.alg_cb.get()
         self.title(f'Работа с {self.entry.name} с помощью алгоритма "{alg}"')
+        if self.current_alg is not None:
+            self.current_alg.pack_forget()
         self.algs[alg].pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.current_alg = self.algs[alg]
 
 
 class DecisionTreeFrame(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, entry, pd_data):
         tk.Frame.__init__(self, parent)
-        tk.Label(self, text='Decision Tree').pack()
+        self.clf = DecisionTreeClassifier
+        self.entry = entry
+        self.pd_data = pd_data
+        self.clf_conf_lb_frm = tk.LabelFrame(self, text='Конфигурация дерева решений')
+        self.clf_conf_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.clf_conf_frm = tk.Frame(self.clf_conf_lb_frm)  # фрейм для установления объектов по центру
+        self.clf_conf_frm.pack()
+        self.model_lb_frm = tk.LabelFrame(self, text='Конфигурация параметров обучения')
+        self.model_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.model_frm_l = tk.Frame(self.model_lb_frm)
+        self.model_frm_l.pack(side=tk.LEFT)
+        self.model_frm_r = tk.Frame(self.model_lb_frm)
+        self.model_frm_r.pack(side=tk.RIGHT)
+        self.default_params = {
+            'criterion': tk.StringVar(self.clf_conf_frm, value='entropy'),
+            'max_depth': tk.StringVar(self.clf_conf_frm, value=15),
+            'min_samples_split': tk.StringVar(self.clf_conf_frm, value=2),
+            'min_samples_leaf': tk.StringVar(self.clf_conf_frm, value=1),
+            'min_weight_fraction_leaf': tk.StringVar(self.clf_conf_frm, value=0.0),
+            'random_state': tk.StringVar(self.clf_conf_frm, value='None')
+        }
+        info = '''
+        criterion: [gini, entropy]; max_depth: максимальная глубина дерева,
+        min_samples_split: минимальное количество объектов для разделения внутри узла;
+        min_samples_leaf: минимальное количество объектов для разделения внутри листа;
+        min_weight_fraction_leaf: минимальный вес узла; 
+        random_state: управляет случайностью оценки.
+        '''
+        tk.Label(self.clf_conf_lb_frm, text='\tПараметры классификатора:' + info, justify=tk.LEFT).pack(side=tk.TOP)
+        ent_options = {
+            'width': 15,
+            'justify': tk.CENTER
+        }
+        tk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
+        self.criterion_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
+        self.criterion_ent.grid(row=1, column=0, padx=5, pady=5)
+
+        tk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
+        self.max_depth_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
+        self.max_depth_ent.grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
+        self.min_samples_split_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
+                                              **ent_options)
+        self.min_samples_split_ent.grid(row=1, column=2, padx=5, pady=5)
+
+        tk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
+        self.min_samples_leaf_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
+                                             **ent_options)
+        self.min_samples_leaf_ent.grid(row=3, column=0, padx=5, pady=10)
+
+        tk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
+        self.min_weight_fraction_leaf_ent = tk.Entry(self.clf_conf_frm,
+                                                     textvariable=self.default_params['min_weight_fraction_leaf'],
+                                                     **ent_options)
+        self.min_weight_fraction_leaf_ent.grid(row=3, column=1, padx=5, pady=10)
+
+        tk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
+        self.random_state_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
+                                         **ent_options)
+        self.random_state_ent.grid(row=3, column=2, padx=5, pady=10)
+
+        model_pack = {
+            'side': tk.TOP,
+            'padx': 5,
+            'pady': 3,
+        }
+        tk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
+        self.col_cb = ttk.Combobox(self.model_frm_l, values=list(self.pd_data.columns))
+        self.col_cb.pack(**model_pack)
+        tk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
+        self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
+        self.split_sb.pack(**model_pack)
+        tk.Button(self.model_frm_l, text='Подтвердить').pack(**model_pack)
 
 
 class RandomForestFrame(tk.Frame):
@@ -58,7 +135,6 @@ class KNeighborsFrame(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         tk.Label(self, text='k Nearest Neighbors').pack()
-        self.clf = DecisionTreeClassifier
 
 
 class MLViewOld(tk.Tk):
