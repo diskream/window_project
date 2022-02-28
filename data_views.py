@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from functions import serialize, deserialize, show_table, update_entry, upload_data, get_entry
 import pandas as pd
 import io
@@ -81,7 +81,10 @@ class DataView(tk.Tk):
         AddWindow(self.entry, self.pd_data, self, self.WIDTH, self.HEIGHT)
 
     def empty_data(self):
-        pass
+        if self.null_columns is None:
+            messagebox.showinfo('Ошибка', 'Пропущенных значений не обнаружено.')
+        else:
+            DataProcessing(self, self.entry, self.pd_data, self.null_columns, self.HEIGHT)
 
     def description(self):
         DescriptionWindow(self.pd_data, self.WIDTH, self.HEIGHT)
@@ -235,6 +238,7 @@ class AddWindow(tk.Tk):
     6. Колонка1 * / "/" / - / + Число
     Функции не ловят испключения. Если будет время - добавить проверку исключений.
     """
+
     # TODO: функциональная часть работает, но нужно сделать отлов исключений
     def __init__(self, entry, pd_data, parent, width, height):
         tk.Tk.__init__(self)
@@ -245,6 +249,7 @@ class AddWindow(tk.Tk):
         self.pd_data = pd_data
         self.columns = list(self.pd_data.columns)
         self.parent = parent
+        self.is_edited = False
         # Разделение окна на таблицу и область действий
         self.table_frm = tk.Frame(self)
         self.table_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
@@ -376,11 +381,12 @@ class AddWindow(tk.Tk):
         """
 
         def wrapped(self):
+            self.is_edited = True
             fn(self)
             self.tv.delete(*self.tv.get_children())
             show_table(self, pd_data=self.pd_data, sb_configure=False)
-        return wrapped
 
+        return wrapped
 
     @_refresh_table
     def comm1(self):
@@ -463,10 +469,14 @@ class AddWindow(tk.Tk):
             self.pd_data[name] = col1.apply(lambda x: x % col2)
 
     def save(self):
-        pass
+        if self.is_edited:
+            DataView.destroy(self.parent)
+            save_to_db(self)
+        else:
+            self.cancel()
 
     def cancel(self):
-        pass
+        self.destroy()
 
 
 class DataPreparation(tk.Tk):
@@ -532,6 +542,94 @@ class DataPreparation(tk.Tk):
             if self.pd_data[col].dtype not in ['int64', 'float64']:
                 self.columns_lb.insert(tk.END, col)
                 self.n_unique[col] = self.pd_data[col].nunique()
+
+    def save(self):
+        if self.is_edited:
+            DataView.destroy(self.parent)
+            save_to_db(self)
+        else:
+            self.cancel()
+
+    def cancel(self):
+        self.destroy()
+
+
+class DataProcessing(tk.Tk):
+    def __init__(self, parent, entry, pd_data, null_columns, height):
+        tk.Tk.__init__(self)
+        self.parent = parent
+        self.HEIGHT = height
+        self.entry = entry
+        self.pd_data = pd_data
+        self.null_cols = null_columns
+        self.title(f'Обработка пропущенных значений в {self.entry.name}')
+        self.main_frm = tk.LabelFrame(self)
+        self.main_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.btn_frm = tk.Frame(self)
+        self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X)
+        self.info_frm = tk.LabelFrame(self.main_frm, text='Информация', height=200)
+        self.info_frm.pack(side=tk.TOP)
+        self.is_edited = False
+
+        self.geometry('500x500')
+
+        self.info_lbl = tk.Label(self.info_frm, text=self.get_info(), justify=tk.LEFT)
+        self.info_lbl.pack(side=tk.TOP, pady=5)
+        self.col_cb = ttk.Combobox(self.main_frm, values=self.null_cols)
+        self.col_cb.pack(side=tk.TOP, pady=5)
+        self.command_frm = tk.LabelFrame(self.main_frm, text='Выберите действие')
+        self.command_frm.pack(side=tk.TOP)
+
+        tk.Button(self.command_frm, text='Удаление', command=self.delete, width=15).pack(side=tk.LEFT, padx=5, pady=5)
+        tk.Button(self.command_frm, text='Среднее', command=self.mean, width=15).pack(side=tk.LEFT, padx=5, pady=5)
+        tk.Button(self.command_frm, text='Медиана', command=self.median, width=15).pack(side=tk.LEFT, padx=5, pady=5)
+        tk.Button(self.command_frm, text='Заполнение 0', command=self.fill_zero, width=15).pack(side=tk.LEFT, padx=5,
+                                                                                                pady=5)
+        tk.Button(self.btn_frm, text='Отмена', command=self.cancel, width=12).pack(side=tk.RIGHT, padx=5, pady=5)
+        tk.Button(self.btn_frm, text='Сохранить', command=self.save, width=12).pack(side=tk.RIGHT, padx=5, pady=5)
+
+
+    def update(fn):
+        def wrapper(self):
+            self.is_edited = True
+            col = fn(self)
+            self.null_cols.remove(col)
+            self.info_lbl.configure(text=self.get_info())
+            self.col_cb.configure(values=self.null_cols)
+        return wrapper
+
+    def get_info(self):
+        if len(self.null_cols) > 0:
+            info = 'Были найдены пропущенные значения в следующих колонках:\n'
+            for col in self.null_cols:
+                info += '%-20s%i\n' % (col, self.pd_data[col].isnull().sum())
+            info += 'Выберите колонку для обработки:'
+        else:
+            info = 'Пропущенные значения в данных не были обнаружены'
+        return info
+    @update
+    def delete(self):
+        col = self.col_cb.get()
+        self.pd_data = self.pd_data.drop(col, axis=1)
+        return col
+
+    @update
+    def mean(self):
+        col = self.col_cb.get()
+        self.pd_data = self.pd_data.fillna({col: int(self.pd_data[col].mean())})
+        return col
+
+    @update
+    def median(self):
+        col = self.col_cb.get()
+        self.pd_data = self.pd_data.fillna({col: self.pd_data[col].median()})
+        return col
+
+    @update
+    def fill_zero(self):
+        col = self.col_cb.get()
+        self.pd_data = self.pd_data.fillna({col: 0})
+        return col
 
     def save(self):
         if self.is_edited:

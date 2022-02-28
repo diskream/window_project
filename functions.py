@@ -7,6 +7,7 @@ from models import *
 
 # Примечание: в функциях есть повторяющиейся строки с созданием соединения и курсора.
 # Сделать либо декоратор, либо функцию, которая будет возвращать соединение.
+
 def treeview_sort_column(tv, col, reverse):
     """
     Функция сортировки по возрастанию и убыванию колонки.
@@ -87,7 +88,6 @@ def show_table(method, sb_configure=True, pd_data=None):
         xsb.pack(side=tk.BOTTOM, fill=tk.X)
     method.tv.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-
     # def get_cols(self):
     #     # getting columns from table
     #     self.cur.execute('SELECT * FROM {} WHERE 1=0'.format(self.table))
@@ -135,11 +135,13 @@ def upload_data(table, **data):
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
-        # Тут костыль: if работает по сути только 1 раз - при обработке
-        # новой таблицы из Tasks. variant_id в таком случае всегда устанавливается
-        # 1. Сделать проверку на уже существующие измененные таблицы...
         if 'variant_id' not in data:
-            data['variant_id'] = 1
+            try:
+                data['variant_id'] = cur.execute(f'SELECT MAX(variant_id) FROM {table} '
+                                                 f'WHERE task_id = {data["task_id"]}').fetchone()[0] + 1
+            except Exception as _ex:
+                print(_ex)
+                data['variant_id'] = 1
         if data['variant_id'] is None:
             variant = cur.execute(f'SELECT MAX(variant_id) FROM {table} '
                                   f'WHERE task_id = {data["task_id"]}').fetchone()[0]

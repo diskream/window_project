@@ -129,11 +129,11 @@ class BottomFrame(tk.LabelFrame):
         self.file_path_lbl = tk.Label(self, text='Путь к файлу: \n' + self.file_path, bg='#abcdef')
         self.file_path_lbl.pack(anchor=tk.N)
 
-        self.file_open_button = tk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=18)
+        self.file_open_button = tk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=20)
         self.file_open_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
         self.db_create_button = tk.Button(self.btn_frm, text='Добавить в таблицу Tasks', command=self.input_table,
-                                          width=18)
+                                          width=20)
         self.db_create_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
         self.db_create_info = tk.StringVar()
@@ -141,7 +141,7 @@ class BottomFrame(tk.LabelFrame):
         tk.Label(self, textvariable=self.db_create_info, bg='#abcdef').pack(anchor=tk.S)
 
         self.table_name = tk.StringVar()
-        self.table_name_entry = tk.Entry(self, textvariable=self.table_name)
+        self.table_name_entry = tk.Entry(self, textvariable=self.table_name, width=40)
         self.table_name_entry.pack(anchor=tk.S)
 
         # self.table_box = ttk.Combobox(self, values=self.get_table_list())
