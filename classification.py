@@ -2,8 +2,18 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import classification_report, roc_curve, auc
 from functions import serialize, deserialize, update_entry
+import numpy as np
+import pandas as pd
+# Для графиков
+import matplotlib
+
+matplotlib.use('TkAgg')
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import seaborn as sns
 
 
 class MLView(tk.Tk):
@@ -15,13 +25,15 @@ class MLView(tk.Tk):
         self.pd_data = deserialize(self.entry.table_file)
         self.upper_frm = tk.LabelFrame(self, text='Выбор алгоритма')
         self.upper_frm.pack(side=tk.TOP, fill=tk.X)
-        self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево решений',
-                                                           'Случайный лес',
-                                                           'k Ближайших соседей'],
+        self.alg_cb = ttk.Combobox(self, values=['Дерево решений',
+                                                 'Случайный лес',
+                                                 'k Ближайших соседей'],
                                    )
+        self.lower_frm = tk.Frame(self)
+        self.lower_frm.pack(side=tk.BOTTOM)
         self.alg_cb.current(0)
         self.alg_cb.pack(side=tk.TOP, pady=10)
-        tk.Button(self.upper_frm, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
+        tk.Button(self, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
         self.update_title()
         self.dt_frm = DecisionTreeFrame(self, self.entry, self.pd_data)
         self.rf_frm = RandomForestFrame(self)
@@ -61,6 +73,9 @@ class DecisionTreeFrame(tk.Frame):
         self.model_frm_l.pack(side=tk.LEFT)
         self.model_frm_r = tk.Frame(self.model_lb_frm)
         self.model_frm_r.pack(side=tk.RIGHT)
+        self.btn_frm = tk.Frame(self)
+        self.btn_frm.pack(side=tk.TOP)
+        self.clf = DecisionTreeClassifier
         self.default_params = {
             'criterion': tk.StringVar(self.clf_conf_frm, value='entropy'),
             'max_depth': tk.StringVar(self.clf_conf_frm, value=15),
@@ -123,22 +138,61 @@ class DecisionTreeFrame(tk.Frame):
         tk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
-        self.check_var = tk.IntVar()
-        self.check_split = ttk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
-                                           variable=self.check_var,onvalue=1, offvalue=0)
+        self.check_var = tk.BooleanVar(self)
+        self.check_split = tk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
+                                          variable=self.check_var, onvalue=True, offvalue=False)
+        print(self.check_var.get())
         self.check_split.pack(**model_pack)
-        tk.Button(self.model_frm_l, text='Подтвердить', command=self.fit).pack(**model_pack)
+        btn_pack = {
+            'side': tk.LEFT,
+            'padx': 10,
+            'pady': 5
+        }
+        tk.Button(self.btn_frm, text='Подтвердить', command=self.fit).pack(**btn_pack)
+        tk.Button(self.btn_frm, text='ROC-кривая', command=self.get_roc).pack(**btn_pack)
+        tk.Button(self.btn_frm, text='Открыть дерево', command=self.get_tree).pack(**btn_pack)
+        tk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
+        self.cv_var = tk.BooleanVar(self)
+        self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
+                                       offvalue=False)
+
+        self.accuracy = '...'
+        self.cv_accuracy = '...'
+        self.check_cv.pack(**model_pack)
+        tk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
+        self.cv_sb = ttk.Spinbox(self.model_frm_r, from_=3, to=7, width=20)
+        self.cv_sb.pack(**model_pack)
+        self.acc_lbl = tk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
+                                                       f'Средняя точность при кросс-валидации:\n{str(self.cv_accuracy)}')
+        self.acc_lbl.pack(**model_pack)
+
+        self.isSplitted = False
 
     def fit(self):
-        clf = self.get_clf()
+        self.clf = self.get_clf()
         if self.check_var.get() == 1:
-            x_train, x_test, y_train, y_test = self.get_split_data()
-            clf.fit(x_train, y_train)
-            print(clf.score(x_test, y_test))
+            x_train, y_train, x_test, y_test = self.get_split_data()
+            self.get_cv(x_train, y_train)
+            self.clf.fit(x_train, y_train)
+            self.accuracy = self.clf.score(x_test, y_test)
+            self.acc_lbl.configure(text=f'Точность модели:\n{str(self.accuracy)}\n'
+                                        f'Точность при кросс-валидации:\n{str(self.cv_accuracy)}')
+            self.isSplitted = True
         else:
             x, y = self.get_split_data()
-            clf.fit(x, y)
-            print(clf.score(x, y))
+            self.get_cv(x, y)
+            self.clf.fit(x, y)
+            self.accuracy = self.clf.score(x, y)
+            self.acc_lbl.configure(text=f'Точность модели:\n{self.accuracy}\n'
+                                        f'Точность при кросс-валидации:\n{self.cv_accuracy}')
+            self.isSplitted = False
+
+    def get_cv(self, x, y):
+        if self.cv_var.get():
+            cv = cross_val_score(self.clf, x, y, cv=int(self.cv_sb.get()))
+            self.cv_accuracy = sum(cv) / len(cv)
+        else:
+            self.cv_accuracy = '...'
 
     def get_split_data(self):
         target = self.col_cb.get()
@@ -147,13 +201,15 @@ class DecisionTreeFrame(tk.Frame):
         if self.check_var.get() == 1:
             percent = float(self.split_sb.get()) / 100
             x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=percent)
-            return x_train, x_test, y_train, y_test
+            return x_train, y_train, x_test, y_test  # именно в формате x, y, x_test, y_test - для работы с графиками
         else:
             return x, y
 
     def get_clf(self):
         params = self.get_params()
-        return DecisionTreeClassifier(**params)
+        if isinstance(self.clf, DecisionTreeClassifier):
+            self.clf = DecisionTreeClassifier  # Обновляем классификатор, если пользователь изменил параметры
+        return self.clf(**params)
 
     def get_params(self):
         ent_obj = [self.criterion_ent, self.max_depth_ent, self.min_samples_split_ent, self.min_samples_leaf_ent,
@@ -170,6 +226,65 @@ class DecisionTreeFrame(tk.Frame):
                 except ValueError:
                     params[param] = obj.get()
         return params
+
+    def get_roc(self) -> None:
+        DecisionTreeModelInfo(self.clf, self.isSplitted, *self.get_split_data())
+
+    def get_tree(self):
+        pass
+
+    def save(self):
+        pass
+
+
+class DecisionTreeModelInfo(tk.Tk):
+    def __init__(self, clf, is_splitted: bool, x, y, x_test=None, y_test=None):
+        tk.Tk.__init__(self)
+        self.clf = clf
+        self.x = x
+        self.y = y
+        self.plot_size = (8, 6)
+        self.is_splitted = is_splitted
+        bg_opt = {
+            'bg': 'white'
+        }
+        self.top_frm = tk.Frame(self, **bg_opt)
+        self.top_frm.pack(side=tk.TOP)
+        self.bottom_frm = tk.Frame(self,**bg_opt)
+        self.bottom_frm.pack(side=tk.BOTTOM, fill=tk.X)
+        if self.is_splitted:
+            self.x_test = x_test
+            self.y_test = y_test
+        self.plot_feature_importance(self.plot_size)
+        self.plot_roc(self.plot_size)
+        prediction = self.clf.predict(self.x_test) if self.is_splitted else self.clf.predict(self.x)
+        report = classification_report(self.y_test if self.is_splitted else self.y, prediction)
+        tk.Label(self.bottom_frm, text=report, justify=tk.LEFT, **bg_opt).pack()
+
+    def plot_feature_importance(self, plot_size: tuple) -> None:
+        feature_importance = self.clf.feature_importances_
+        feature_names = self.x.columns
+        # Create a DataFrame using a Dictionary
+        data = {'feature_names': feature_names, 'feature_importance': feature_importance}
+        fi_df = pd.DataFrame(data)
+        # Sort the DataFrame in order decreasing feature importance
+        fi_df.sort_values(by=['feature_importance'], ascending=False, inplace=True)
+        figure = Figure(figsize=plot_size, dpi=100)
+        ax = figure.add_subplot(1, 1, 1)
+        sns.barplot(y=fi_df['feature_names'], x=fi_df['feature_importance'], ax=ax)
+        f_i_graph = FigureCanvasTkAgg(figure, self.top_frm)
+        f_i_graph.get_tk_widget().pack(side=tk.LEFT)
+
+    def plot_roc(self, plot_size):
+        y_predicted = self.clf.predict_proba(self.x_test if self.is_splitted else self.x)
+        fpr, tpr, thresholds = roc_curve(self.y_test if self.is_splitted else self.y, y_predicted[:, 1])
+        roc_auc = auc(fpr, tpr)
+        figure = Figure(figsize=plot_size, dpi=100)
+        plt = figure.add_subplot(1, 1, 1)
+        plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        roc_graph = FigureCanvasTkAgg(figure, self.top_frm)
+        roc_graph.get_tk_widget().pack(side=tk.LEFT)
 
 
 class RandomForestFrame(tk.Frame):

@@ -20,7 +20,6 @@ class App(tk.Tk):
         self.file_upload_frame = BottomFrame(self)
         self.file_upload_frame.pack(fill=tk.BOTH, side=tk.BOTTOM, expand=True)
 
-
         # self.table_list_frame.pack(anchor=tk.NW)
         # self.to_tree_frame = TopRightFrame(self, text='Open a table')
         # self.to_tree_frame.place(x=250, y=0, anchor='nw', width=250, height=250)
