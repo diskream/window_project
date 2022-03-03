@@ -69,9 +69,12 @@ class TopFrame(tk.Frame):
             self.warn_var.set('Данные не выбраны. Пожалуйста, выберетите данные из списка выше.')
             return
         elif table['tags'][0] == 'table':
-            TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'])
+            TableView(True, table['text'])
         else:
-            TableView(tk.Toplevel(self), geometry='1000x700', data=table['text'], table=table['tags'])
+            s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
+            entry = json.loads(s)
+            TableView(False, entry=self.get_entry(entry['table'], entry['task_id'],
+                                           entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_ml(self):
         table = self.tv_hier.item(self.tv_hier.selection())
