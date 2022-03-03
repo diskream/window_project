@@ -1,7 +1,7 @@
 import sqlite3
 import tkinter as tk
 from tkinter import ttk
-from functions import show_table, update_entry, deserialize
+from tools.functions import show_table, update_entry, deserialize
 
 
 class TableView(tk.Tk):

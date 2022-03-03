@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, roc_curve, auc
-from functions import serialize, deserialize, update_entry
+from tools.functions import serialize, deserialize, update_entry
 import pandas as pd
 # Для графиков
 import matplotlib

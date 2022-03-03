@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from main_window_frames import TopFrame, BottomFrame
+from functional_views.main_window_frames import TopFrame, BottomFrame
 
 
 class App(tk.Tk):

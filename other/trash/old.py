@@ -10,11 +10,11 @@ def insert_tv_old(self):
         if len(tables_list) >= 4:
             tables_list = tables_list[1:]
         for table in tables_list:
-            self.tv_hier.insert('', '0', f'item{n}', text=table, tags='table')
+            self.tv_hierarchy.insert('', '0', f'item{n}', text=table, tags='table')
             names = cur.execute('SELECT name FROM {}'.format(table[0])).fetchall()
             if table[0] != 'Task_variant':  # Для обычных случаев
                 for name in names:
-                    self.tv_hier.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
+                    self.tv_hierarchy.insert(f'item{n}', tk.END, text=name, tags=f'{table[0]}')
                 if table[0] == 'Tasks':
                     _sql = 'SELECT task_id, name FROM TASKS'
                     query = cur.execute(_sql).fetchall()
@@ -45,9 +45,9 @@ def insert_tv_old(self):
                     else:
                         hierarchy_dict[variant[-1]].append(_temp_dict)
                 for task, info in hierarchy_dict.items():
-                    self.tv_hier.insert(f'item{n}', '1', f'it{n + 1}', text=task)
+                    self.tv_hierarchy.insert(f'item{n}', '1', f'it{n + 1}', text=task)
                     for info1 in info:
-                        self.tv_hier.insert(f'it{n + 1}', tk.END, text=info1['variant_name'], tags=f'{table[0]}')
+                        self.tv_hierarchy.insert(f'it{n + 1}', tk.END, text=info1['variant_name'], tags=f'{table[0]}')
 
             n += 1
     finally:

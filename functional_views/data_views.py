@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from functions import serialize, deserialize, show_table, update_entry, upload_data, get_entry
+from tools.functions import serialize, deserialize, show_table, update_entry, upload_data, get_entry
 import pandas as pd
 import io
 

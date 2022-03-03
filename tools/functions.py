@@ -2,7 +2,7 @@ import sqlite3
 import pickle
 import tkinter as tk
 from tkinter import ttk
-from models import *
+from tools.models import *
 
 
 # Примечание: в функциях есть повторяющиейся строки с созданием соединения и курсора.

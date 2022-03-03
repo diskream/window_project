@@ -3,11 +3,11 @@ import pandas as pd
 import json
 from tkinter import ttk
 import sqlite3
-from table_view import TableView
+from functional_views.table_view import TableView
 from tkinter.filedialog import askopenfile
-from classification import MLView
-from data_views import DataView
-from functions import serialize, get_db
+from machine_learning.classification import MLView
+from functional_views.data_views import DataView
+from tools.functions import serialize, get_db
 
 
 class TopFrame(tk.Frame):
@@ -16,8 +16,8 @@ class TopFrame(tk.Frame):
         self.master = master
         tk.Label(self, text='Выберите данные из вложенного списка:').pack(side=tk.TOP, ipady=10)
         # Creating hierarchical treeview
-        self.tv_hier = ttk.Treeview(self, height=13, show='tree')
-        self.tv_hier.pack(side=tk.TOP)
+        self.tv_hierarchy = ttk.Treeview(self, height=13, show='tree')
+        self.tv_hierarchy.pack(side=tk.TOP)
         self.db = get_db()
         self.insert_tv(self.db)
 
@@ -33,6 +33,7 @@ class TopFrame(tk.Frame):
         self.table_open_btn.pack(side=tk.RIGHT, padx=10, pady=10)
         self.data_btn = tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18)
         self.data_btn.pack(side=tk.RIGHT, padx=10, pady=10)
+        tk.Button(self.btn_lb_frm, text='Визуализация', command=self.open_visual).pack(side=tk.BOTTOM)
 
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
@@ -47,10 +48,10 @@ class TopFrame(tk.Frame):
         :return:
         """
         for table, entries in db.items():
-            self.tv_hier.insert('', '0', table, text=table, tags='table')
+            self.tv_hierarchy.insert('', '0', table, text=table, tags='table')
             if table != 'Task_variant':
                 for entry in entries:
-                    self.tv_hier.insert(table, tk.END, text=entry.name, tags=entry)
+                    self.tv_hierarchy.insert(table, tk.END, text=entry.name, tags=entry)
             else:
                 # Находим количество родительских данных
                 parents = []
@@ -58,13 +59,13 @@ class TopFrame(tk.Frame):
                     parents.append(entry.parent_name)
                 # Создаем для каждого родителя новую ветку:
                 for parent in set(parents):
-                    self.tv_hier.insert(table, '1', parent, text=parent, tags='Tasks')
+                    self.tv_hierarchy.insert(table, '1', parent, text=parent, tags='Tasks')
                 for entry in entries:
-                    self.tv_hier.insert(entry.parent_name, '2', text=entry.name, tags=entry)
+                    self.tv_hierarchy.insert(entry.parent_name, '2', text=entry.name, tags=entry)
 
     def open_table(self):
-        print(self.tv_hier.item(self.tv_hier.selection()))
-        table = self.tv_hier.item(self.tv_hier.selection())
+        print(self.tv_hierarchy.item(self.tv_hierarchy.selection()))
+        table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
         if table['text'] == '':
             self.warn_var.set('Данные не выбраны. Пожалуйста, выберетите данные из списка выше.')
             return
@@ -74,10 +75,10 @@ class TopFrame(tk.Frame):
             s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
             entry = json.loads(s)
             TableView(False, entry=self.get_entry(entry['table'], entry['task_id'],
-                                           entry['variant_id'] if 'variant_id' in entry else None))
+                                                  entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_ml(self):
-        table = self.tv_hier.item(self.tv_hier.selection())
+        table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
         if self.table_check(table):
             s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
             entry = json.loads(s)
@@ -85,12 +86,15 @@ class TopFrame(tk.Frame):
                                   entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_data(self):
-        table = self.tv_hier.item(self.tv_hier.selection())
+        table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
         if self.table_check(table):
             s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
             entry = json.loads(s)
             DataView(self.master.HEIGHT, entry=self.get_entry(entry['table'], entry['task_id'],
                                                               entry['variant_id'] if 'variant_id' in entry else None))
+
+    def open_visual(self):
+        pass
 
     def get_entry(self, table, task_id, variant_id=None):
         for value in self.db[table]:
@@ -108,11 +112,10 @@ class TopFrame(tk.Frame):
             return True
 
     def update_table(self):
-        self.tv_hier.delete(*self.tv_hier.get_children())
+        self.tv_hierarchy.delete(*self.tv_hierarchy.get_children())
         self.insert_tv(get_db())
 
-    @staticmethod
-    def get_tables_list():
+    def get_tables_list(self):
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
         try:
@@ -154,8 +157,8 @@ class BottomFrame(tk.LabelFrame):
 
         # self.table_box = ttk.Combobox(self, values=self.get_table_list())
         # self.table_box.pack(side=tk.BOTTOM)
-
-    def get_table_list(self):
+    @staticmethod
+    def get_table_list():
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
         try:
