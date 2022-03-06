@@ -553,7 +553,7 @@ def save_model(entry, clf, accuracy):
             model_id = cur.execute(f'SELECT MAX(model_id) FROM Models WHERE task_id = {data["task_id"]}'
                                    f' AND variant_id = {data["variant_id"]}').fetchone()[0] + 1
             data['model_id'] = model_id
-        except sqlite3.DatabaseError:
+        except TypeError:
             data['model_id'] = 1
         data['name'] = entry.name + f'_m_{data["model_id"]}' if not isinstance(entry.name, tuple) \
             else entry.name[0] + f'_m_{data["model_id"]}'

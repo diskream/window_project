@@ -7,6 +7,7 @@ from functional_views.table_view import TableView
 from tkinter.filedialog import askopenfile
 from machine_learning.classification import MLView
 from functional_views.data_views import DataView
+from functional_views.visualization import VisualisationView
 from tools.functions import serialize, get_db
 
 
@@ -28,12 +29,12 @@ class TopFrame(tk.Frame):
         self.btn_frm.pack()
         # Buttons for the new windows
         self.ml_window_btn = tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18)
-        self.ml_window_btn.pack(side=tk.RIGHT, padx=10, pady=10, anchor=tk.W)
+        self.ml_window_btn.pack(side=tk.RIGHT, padx=10, anchor=tk.W)
         self.table_open_btn = tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18)
-        self.table_open_btn.pack(side=tk.RIGHT, padx=10, pady=10)
+        self.table_open_btn.pack(side=tk.RIGHT, padx=10)
         self.data_btn = tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18)
-        self.data_btn.pack(side=tk.RIGHT, padx=10, pady=10)
-        tk.Button(self.btn_lb_frm, text='Визуализация', command=self.open_visual).pack(side=tk.BOTTOM)
+        self.data_btn.pack(side=tk.RIGHT, padx=10)
+        tk.Button(self.btn_lb_frm, text='Визуализация', command=self.open_visual, width=18).pack(side=tk.BOTTOM, pady=5)
 
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
@@ -78,23 +79,26 @@ class TopFrame(tk.Frame):
                                                   entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_ml(self):
-        table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
-        if self.table_check(table):
-            s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
-            entry = json.loads(s)
-            MLView(self.get_entry(entry['table'], entry['task_id'],
-                                  entry['variant_id'] if 'variant_id' in entry else None))
+        entry = self.get_dict_entry()
+        MLView(self.get_entry(entry['table'], entry['task_id'],
+                              entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_data(self):
+        entry = self.get_dict_entry()
+        DataView(self.master.HEIGHT, entry=self.get_entry(entry['table'], entry['task_id'],
+                                                          entry['variant_id'] if 'variant_id' in entry else None))
+
+    def open_visual(self):
+        entry = self.get_dict_entry()
+        VisualisationView(self.get_entry(entry['table'], entry['task_id'],
+                                         entry['variant_id'] if 'variant_id' in entry else None))
+
+    def get_dict_entry(self):
         table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
         if self.table_check(table):
             s = '{' + table['tags'][0].replace('(', '').replace(',)', '').replace("'", '"').replace('None', '0') + '}'
             entry = json.loads(s)
-            DataView(self.master.HEIGHT, entry=self.get_entry(entry['table'], entry['task_id'],
-                                                              entry['variant_id'] if 'variant_id' in entry else None))
-
-    def open_visual(self):
-        pass
+            return entry
 
     def get_entry(self, table, task_id, variant_id=None):
         for value in self.db[table]:
@@ -115,7 +119,8 @@ class TopFrame(tk.Frame):
         self.tv_hierarchy.delete(*self.tv_hierarchy.get_children())
         self.insert_tv(get_db())
 
-    def get_tables_list(self):
+    @staticmethod
+    def get_tables_list():
         conn = sqlite3.connect('main.sqlite3')
         cur = conn.cursor()
         try:
@@ -157,6 +162,7 @@ class BottomFrame(tk.LabelFrame):
 
         # self.table_box = ttk.Combobox(self, values=self.get_table_list())
         # self.table_box.pack(side=tk.BOTTOM)
+
     @staticmethod
     def get_table_list():
         conn = sqlite3.connect('main.sqlite3')
@@ -180,7 +186,7 @@ class BottomFrame(tk.LabelFrame):
                 raise ValueError
             else:
                 file = serialize(pd.read_csv(str(self.file_path)))
-                cur.execute('INSERT INTO Task_variant (task_id, variant_id, name, table_file) VALUES (2, 1, ?, ?)',
+                cur.execute('INSERT INTO Tasks (task_id, name, table_file) VALUES (4, ?, ?)',
                             (name, file))
                 conn.commit()
         except ValueError:

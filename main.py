@@ -9,7 +9,7 @@ class App(tk.Tk):
         self.HEIGHT = 700
         self.WIDTH = (7 * self.HEIGHT) // 9
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
-        self.title('Brand New Window')
+        self.title('Дипломный проект v0.036a')
 
         self.table_list_frame = TopFrame(self)
         self.table_list_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
