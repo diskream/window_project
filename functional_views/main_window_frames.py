@@ -5,7 +5,8 @@ from tkinter import ttk
 import sqlite3
 from functional_views.table_view import TableView
 from tkinter.filedialog import askopenfile
-from machine_learning.classification import MLView
+from machine_learning.classification import ClassificationView
+from machine_learning.clustering import ClusteringView
 from functional_views.data_views import DataView
 from functional_views.visualization import VisualisationView
 from tools.functions import serialize, get_db
@@ -28,13 +29,16 @@ class TopFrame(tk.Frame):
         self.btn_frm = tk.Frame(self.btn_lb_frm)
         self.btn_frm.pack()
         # Buttons for the new windows
-        self.ml_window_btn = tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18)
-        self.ml_window_btn.pack(side=tk.RIGHT, padx=10, anchor=tk.W)
-        self.table_open_btn = tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18)
-        self.table_open_btn.pack(side=tk.RIGHT, padx=10)
-        self.data_btn = tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18)
-        self.data_btn.pack(side=tk.RIGHT, padx=10)
-        tk.Button(self.btn_lb_frm, text='Визуализация', command=self.open_visual, width=18).pack(side=tk.BOTTOM, pady=5)
+        btn_pad = {
+            'padx': 10,
+            'pady': 5
+        }
+        tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18).grid(row=1, column=0, **btn_pad)
+        tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18).grid(row=0, column=0, **btn_pad)
+        tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18).grid(row=0, column=1, **btn_pad)
+        tk.Button(self.btn_frm, text='Визуализация', command=self.open_visual, width=18).grid(row=0, column=2, **btn_pad)
+        tk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster, width=18).grid(row=1, column=1, **btn_pad)
+        tk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural, width=18).grid(row=1, column=2, **btn_pad)
 
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
@@ -80,8 +84,8 @@ class TopFrame(tk.Frame):
 
     def open_ml(self):
         entry = self.get_dict_entry()
-        MLView(self.get_entry(entry['table'], entry['task_id'],
-                              entry['variant_id'] if 'variant_id' in entry else None))
+        ClassificationView(self.get_entry(entry['table'], entry['task_id'],
+                                          entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_data(self):
         entry = self.get_dict_entry()
@@ -92,6 +96,14 @@ class TopFrame(tk.Frame):
         entry = self.get_dict_entry()
         VisualisationView(self.get_entry(entry['table'], entry['task_id'],
                                          entry['variant_id'] if 'variant_id' in entry else None))
+
+    def open_cluster(self):
+        entry = self.get_dict_entry()
+        ClusteringView(self.get_entry(entry['table'], entry['task_id'],
+                                      entry['variant_id'] if 'variant_id' in entry else None))
+
+    def open_neural(self):
+        pass
 
     def get_dict_entry(self):
         table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
@@ -186,9 +198,12 @@ class BottomFrame(tk.LabelFrame):
                 raise ValueError
             else:
                 file = serialize(pd.read_csv(str(self.file_path)))
-                cur.execute('INSERT INTO Tasks (task_id, name, table_file) VALUES (4, ?, ?)',
-                            (name, file))
+                _sql = 'SELECT MAX(task_id) FROM Tasks'
+                task_id = cur.execute(_sql).fetchone()[0] + 1
+                cur.execute('INSERT INTO Tasks (task_id, name, table_file) VALUES (?, ?, ?)',
+                            (task_id, name, file))
                 conn.commit()
+                self.db_create_info.set(f'Файл {name} загружен успешно.')
         except ValueError:
             self.db_create_info.set('Введите название таблицы!')
         except FileNotFoundError:

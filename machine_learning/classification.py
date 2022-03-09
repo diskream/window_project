@@ -18,7 +18,7 @@ import seaborn as sns
 matplotlib.use('TkAgg')
 
 
-class MLView(tk.Tk):
+class ClassificationView(tk.Tk):
     def __init__(self, entry):
         tk.Tk.__init__(self)
         self.geometry('500x500')
@@ -27,15 +27,15 @@ class MLView(tk.Tk):
         self.pd_data = deserialize(self.entry.table_file)
         self.upper_frm = tk.LabelFrame(self, text='Выбор алгоритма')
         self.upper_frm.pack(side=tk.TOP, fill=tk.X)
-        self.alg_cb = ttk.Combobox(self, values=['Дерево решений',
-                                                 'Случайный лес',
-                                                 'k Ближайших соседей'],
+        self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево решений',
+                                                           'Случайный лес',
+                                                           'k Ближайших соседей'],
                                    )
         self.lower_frm = tk.Frame(self)
         self.lower_frm.pack(side=tk.BOTTOM)
         self.alg_cb.current(0)
         self.alg_cb.pack(side=tk.TOP, pady=10)
-        tk.Button(self, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
+        tk.Button(self.upper_frm, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
         self.update_title()
         self.dt_frm = DecisionTreeFrame(self, self.entry, self.pd_data)
         self.rf_frm = RandomForestFrame(self, self.entry, self.pd_data)
@@ -412,7 +412,8 @@ class KNeighborsFrame(DecisionTreeFrame):
             'justify': tk.CENTER
         }
         tk.Label(self.clf_conf_frm, text='n_neighbors').grid(row=0, column=0, padx=5)
-        self.n_neighbors_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_neighbors'], **ent_options)
+        self.n_neighbors_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_neighbors'],
+                                        **ent_options)
         self.n_neighbors_ent.grid(row=1, column=0, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='weights').grid(row=0, column=1, padx=5)
@@ -431,7 +432,7 @@ class KNeighborsFrame(DecisionTreeFrame):
         self.p_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['p'], **ent_options)
         self.p_ent.grid(row=3, column=1, padx=5, pady=5)
         # Доп параметры, которых нет в родительском классе DecisionTreeFrame
-        extra_params = {'params': [self.n_neighbors_ent,self.weights_ent, self.algorithm_ent, self.leaf_size_ent,
+        extra_params = {'params': [self.n_neighbors_ent, self.weights_ent, self.algorithm_ent, self.leaf_size_ent,
                                    self.p_ent]}
         model_pack = {
             'side': tk.TOP,
