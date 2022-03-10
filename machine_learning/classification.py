@@ -1,12 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import sqlite3
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, roc_curve, auc
-from tools.functions import serialize, deserialize, update_entry
+from tools.functions import deserialize, update_entry, save_model
 import pandas as pd
 # Для графиков
 import matplotlib
@@ -538,30 +537,3 @@ class DecisionTreePlot(tk.Tk):
         tk.Label(self, text='Window is currently unavailable')
 
 
-def save_model(entry, clf, accuracy):
-    conn = sqlite3.connect('main.sqlite3')
-    cur = conn.cursor()
-    try:
-        data = {
-            'model_id': None,
-            'task_id': entry.task_id,
-            'variant_id': entry.variant_id,
-            'name': None,
-            'accuracy': accuracy,
-            'bin_file': serialize(clf)
-        }
-        try:
-            model_id = cur.execute(f'SELECT MAX(model_id) FROM Models WHERE task_id = {data["task_id"]}'
-                                   f' AND variant_id = {data["variant_id"]}').fetchone()[0] + 1
-            data['model_id'] = model_id
-        except TypeError:
-            data['model_id'] = 1
-        data['name'] = entry.name + f'_m_{data["model_id"]}' if not isinstance(entry.name, tuple) \
-            else entry.name[0] + f'_m_{data["model_id"]}'
-        placeholders = ', '.join('?' for _ in data.values())  # форматирование данных для запроса
-        cols = ', '.join(data.keys())  # форматирование названия колонок для запроса
-        _sql = f'INSERT INTO Models ({cols}) VALUES ({placeholders})'
-        cur.execute(_sql, tuple(data.values()))
-    finally:
-        conn.commit()
-        conn.close()

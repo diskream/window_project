@@ -146,7 +146,7 @@ def upload_data(table, **data):
             variant = cur.execute(f'SELECT MAX(variant_id) FROM {table} '
                                   f'WHERE task_id = {data["task_id"]}').fetchone()[0]
             data['variant_id'] = variant + 1
-        data['name'] += f'_{data["variant_id"]}'
+        data['name'] = f'{data["name"][:-2]}_{data["variant_id"]}'
         placeholders = ', '.join('?' for _ in data.values())  # форматирование данных для запроса
         cols = ', '.join(data.keys())  # форматирование названия колонок для запроса
         _sql = f'INSERT INTO {table} ({cols}) VALUES ({placeholders})'
@@ -198,7 +198,6 @@ def update_entry(entry):
         sql = f'SELECT table_file FROM {entry.table} WHERE task_id = {entry.task_id} '
         if hasattr(entry, 'variant_id'):
             sql += f'AND variant_id = {entry.variant_id} '
-        print(sql)
         with sqlite3.connect('main.sqlite3') as conn:
             entry.table_file = conn.cursor().execute(sql).fetchall()[0][0]
 
@@ -220,4 +219,33 @@ def get_entry(table, **data):
                             f' AND variant_id = {data["variant_id"]}').fetchall()[0]
         return Variant(*query)  # * - распаковка списка
     finally:
+        conn.close()
+
+
+def save_model(entry, clf, accuracy=None):
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    try:
+        data = {
+            'model_id': None,
+            'task_id': entry.task_id,
+            'variant_id': entry.variant_id,
+            'name': None,
+            'accuracy': accuracy if accuracy else None,
+            'bin_file': serialize(clf)
+        }
+        try:
+            model_id = cur.execute(f'SELECT MAX(model_id) FROM Models WHERE task_id = {data["task_id"]}'
+                                   f' AND variant_id = {data["variant_id"]}').fetchone()[0] + 1
+            data['model_id'] = model_id
+        except TypeError:
+            data['model_id'] = 1
+        data['name'] = entry.name + f'_m_{data["model_id"]}' if not isinstance(entry.name, tuple) \
+            else entry.name[0] + f'_m_{data["model_id"]}'
+        placeholders = ', '.join('?' for _ in data.values())  # форматирование данных для запроса
+        cols = ', '.join(data.keys())  # форматирование названия колонок для запроса
+        _sql = f'INSERT INTO Models ({cols}) VALUES ({placeholders})'
+        cur.execute(_sql, tuple(data.values()))
+    finally:
+        conn.commit()
         conn.close()

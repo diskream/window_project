@@ -19,7 +19,7 @@ def graph_forget(fn):
         try:
             fn(self)
         except Exception as _ex:
-            sns.lineplot(x=[1, 2, 3, 4], y=[3, 1, 4, 4], ax=self.ax)
+            sinplot(self)
             print(_ex)
 
         self.graph = FigureCanvasTkAgg(self.figure, self)
@@ -27,6 +27,12 @@ def graph_forget(fn):
         self.graph.pack(side=tk.TOP)
 
     return wrapped
+
+
+def sinplot(self, flip=1):
+    x = np.linspace(0, 14, 100)
+    for i in range(1, 7):
+        self.ax.plot(x, np.sin(x + i * .5) * (7 - i) * flip)
 
 
 class VisualisationView(tk.Tk):
@@ -55,7 +61,10 @@ class VisualisationView(tk.Tk):
 
         self.figure = Figure(figsize=self.figsize, dpi=self.dpi)
         self.ax = self.figure.add_subplot(1, 1, 1)
-        sns.lineplot(x=[1, 2, 3, 4], y=[3, 1, 4, 4], ax=self.ax)
+        sns.set_theme()
+        sns.set_style('whitegrid')
+        sns.set_context(rc={"lines.linewidth": 1.7})
+        sinplot(self)
         self.graph = FigureCanvasTkAgg(self.figure, self)
         self.graph = self.graph.get_tk_widget()
         self.graph.pack(side=tk.TOP)
@@ -216,4 +225,3 @@ class VisualisationView(tk.Tk):
         if hue == '':
             hue = None
         sns.scatterplot(x=x, y=y, hue=hue, data=self.pd_data, ax=self.ax)
-
