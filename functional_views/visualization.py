@@ -97,7 +97,7 @@ class VisualisationView(tk.Tk):
         tk.Label(linear_lb_frm, text='Hue :').grid(row=2, column=0, **_pad)
         self.hue_linear_cb = ttk.Combobox(linear_lb_frm, values=cols)
         self.hue_linear_cb.grid(row=2, column=1, **_pad)
-        tk.Button(linear_lb_frm, text='Отобразить', command=self.get_line_plot).grid(row=3, column=0, columnspan=2,
+        ttk.Button(linear_lb_frm, text='Отобразить', command=self.get_line_plot).grid(row=3, column=0, columnspan=2,
                                                                                      **_pad)
 
         # Bar Plot
@@ -110,7 +110,7 @@ class VisualisationView(tk.Tk):
         tk.Label(bar_lb_frm, text='Hue :').grid(row=2, column=0, **_pad)
         self.hue_bar_cb = ttk.Combobox(bar_lb_frm, values=cols)
         self.hue_bar_cb.grid(row=2, column=1, **_pad)
-        tk.Button(bar_lb_frm, text='Отобразить', command=self.get_bar_plot).grid(row=3, column=0, columnspan=2, **_pad)
+        ttk.Button(bar_lb_frm, text='Отобразить', command=self.get_bar_plot).grid(row=3, column=0, columnspan=2, **_pad)
 
         # HeatMap
         tk.Label(heat_lb_frm, text='X :').grid(row=0, column=0, **_pad)
@@ -123,7 +123,7 @@ class VisualisationView(tk.Tk):
         self.corr_hm_cb = ttk.Combobox(heat_lb_frm, values=[True, False])
         self.corr_hm_cb.grid(row=2, column=1, **_pad)
         self.corr_hm_cb.current(0)
-        tk.Button(heat_lb_frm, text='Отобразить', command=self.get_hm_plot).grid(row=3, column=0, columnspan=2, **_pad)
+        ttk.Button(heat_lb_frm, text='Отобразить', command=self.get_hm_plot).grid(row=3, column=0, columnspan=2, **_pad)
 
         # Count Plot
         tk.Label(count_lb_frm, text='X :').grid(row=0, column=0, **_pad)
@@ -135,7 +135,7 @@ class VisualisationView(tk.Tk):
         tk.Label(count_lb_frm, text='Hue :').grid(row=2, column=0, **_pad)
         self.hue_count_cb = ttk.Combobox(count_lb_frm, values=cols)
         self.hue_count_cb.grid(row=2, column=1, **_pad)
-        tk.Button(count_lb_frm, text='Отобразить', command=self.get_count_plot).grid(row=3, column=0, columnspan=2,
+        ttk.Button(count_lb_frm, text='Отобразить', command=self.get_count_plot).grid(row=3, column=0, columnspan=2,
                                                                                      **_pad)
 
         # reg Plot
@@ -145,7 +145,7 @@ class VisualisationView(tk.Tk):
         tk.Label(reg_lb_frm, text='Y :').grid(row=1, column=0, **_pad)
         self.y_reg_cb = ttk.Combobox(reg_lb_frm, values=cols)
         self.y_reg_cb.grid(row=1, column=1, **_pad)
-        tk.Button(reg_lb_frm, text='Отобразить', command=self.get_reg_plot).grid(row=3, column=0, columnspan=2,
+        ttk.Button(reg_lb_frm, text='Отобразить', command=self.get_reg_plot).grid(row=3, column=0, columnspan=2,
                                                                                  **_pad)
 
         # Scatter Plot
@@ -158,7 +158,7 @@ class VisualisationView(tk.Tk):
         tk.Label(scatter_lb_frm, text='Hue :').grid(row=2, column=0, **_pad)
         self.hue_scatter_cb = ttk.Combobox(scatter_lb_frm, values=cols)
         self.hue_scatter_cb.grid(row=2, column=1, **_pad)
-        tk.Button(scatter_lb_frm, text='Отобразить', command=self.get_scatter_plot).grid(row=3, column=0, columnspan=2,
+        ttk.Button(scatter_lb_frm, text='Отобразить', command=self.get_scatter_plot).grid(row=3, column=0, columnspan=2,
                                                                                          **_pad)
 
     @graph_forget

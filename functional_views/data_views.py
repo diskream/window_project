@@ -58,13 +58,13 @@ class DataView(tk.Tk):
         self.isnull_lbl.pack(anchor=tk.NW)
 
         # Кнопки действий
-        tk.Button(self.af1_frm, text='Преобразование данных',
+        ttk.Button(self.af1_frm, text='Преобразование данных',
                   command=self.data_preparation).pack(side=tk.LEFT, pady=20, padx=20)
-        tk.Button(self.af1_frm, text='Удаление колонки', command=self.del_column).pack(side=tk.LEFT, pady=20, padx=20)
-        tk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
-        tk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
+        ttk.Button(self.af1_frm, text='Удаление колонки', command=self.del_column).pack(side=tk.LEFT, pady=20, padx=20)
+        ttk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
+        ttk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
                                                                                                 padx=20)
-        tk.Button(self.af1_frm, text='Информация по данным', command=self.description).pack(side=tk.LEFT, pady=20,
+        ttk.Button(self.af1_frm, text='Информация по данным', command=self.description).pack(side=tk.LEFT, pady=20,
                                                                                             padx=20)
 
     def data_preparation(self):
@@ -148,12 +148,12 @@ class DeleteWindow(tk.Tk):
         tk.Label(lb_frm, text='Пожалуйста, выберете одну или\nнесколько колонок для удаления').pack()
         self.columns_lb.pack(fill=tk.BOTH, expand=1)
 
-        tk.Button(confirm_frm, text='Отмена', command=self.cancel).pack(side=tk.RIGHT, padx=20, pady=5)
-        tk.Button(confirm_frm, text='Сохранить', command=self.save).pack(side=tk.RIGHT, padx=20, pady=5)
+        ttk.Button(confirm_frm, text='Отмена', command=self.cancel).pack(side=tk.RIGHT, padx=20, pady=5)
+        ttk.Button(confirm_frm, text='Сохранить', command=self.save).pack(side=tk.RIGHT, padx=20, pady=5)
 
         self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
         self.warn_lbl.pack(side=tk.TOP)
-        tk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35,
+        ttk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35,
                   bg='#abcdef', activebackground='#a6caf0').pack(side=tk.TOP, fill=tk.X)
 
     def del_col(self):
@@ -285,8 +285,8 @@ class AddWindow(tk.Tk):
         self.add_frm_4.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
         self.add_frm_5.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
         self.add_frm_6.pack(side=tk.LEFT, anchor=tk.S, fill=tk.BOTH, expand=1)
-        tk.Button(self.buttons_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
-        tk.Button(self.buttons_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
+        ttk.Button(self.buttons_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
+        ttk.Button(self.buttons_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
         # Добавление элементов в фрейм 1
         for frm in [self.add_frm_1, self.add_frm_2, self.add_frm_3, self.add_frm_4, self.add_frm_5, self.add_frm_6]:
             tk.Label(frm, text='Введите название новой колонки:', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
@@ -305,12 +305,12 @@ class AddWindow(tk.Tk):
         self.ent_5.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         self.ent_6.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Кнопки сохранения
-        tk.Button(self.add_frm_1, text='Добавить', command=self.comm1).pack(side=tk.BOTTOM, padx=5, pady=5)
-        tk.Button(self.add_frm_2, text='Добавить', command=self.comm2).pack(side=tk.BOTTOM, padx=5, pady=5)
-        tk.Button(self.add_frm_3, text='Добавить', command=self.comm3).pack(side=tk.BOTTOM, padx=5, pady=5)
-        tk.Button(self.add_frm_4, text='Добавить', command=self.comm4).pack(side=tk.BOTTOM, padx=5, pady=5)
-        tk.Button(self.add_frm_5, text='Добавить', command=self.comm5).pack(side=tk.BOTTOM, padx=5, pady=5)
-        tk.Button(self.add_frm_6, text='Добавить', command=self.comm6).pack(side=tk.BOTTOM, padx=5, pady=5)
+        ttk.Button(self.add_frm_1, text='Добавить', command=self.comm1).pack(side=tk.BOTTOM, padx=5, pady=5)
+        ttk.Button(self.add_frm_2, text='Добавить', command=self.comm2).pack(side=tk.BOTTOM, padx=5, pady=5)
+        ttk.Button(self.add_frm_3, text='Добавить', command=self.comm3).pack(side=tk.BOTTOM, padx=5, pady=5)
+        ttk.Button(self.add_frm_4, text='Добавить', command=self.comm4).pack(side=tk.BOTTOM, padx=5, pady=5)
+        ttk.Button(self.add_frm_5, text='Добавить', command=self.comm5).pack(side=tk.BOTTOM, padx=5, pady=5)
+        ttk.Button(self.add_frm_6, text='Добавить', command=self.comm6).pack(side=tk.BOTTOM, padx=5, pady=5)
         # При создании новой колонки используется как минимум одна старая
         tk.Label(self.add_frm_1, text='Выберите колонку с Timestamp', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
                                                                                          padx=5)
@@ -506,11 +506,11 @@ class DataPreparation(tk.Tk):
         self.get_lb()
         self.columns_lb.pack(fill=tk.BOTH, expand=1)
 
-        tk.Button(self.action_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, anchor=tk.S,
+        ttk.Button(self.action_frm, text='Отмена', command=self.cancel, width=10).pack(side=tk.RIGHT, anchor=tk.S,
                                                                                       padx=10, pady=10)
-        tk.Button(self.action_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, anchor=tk.S,
+        ttk.Button(self.action_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, anchor=tk.S,
                                                                                        padx=10, pady=10)
-        tk.Button(self.action_frm, text='Преобразовать', command=self.convert_data).pack(side=tk.TOP, anchor=tk.W,
+        ttk.Button(self.action_frm, text='Преобразовать', command=self.convert_data).pack(side=tk.TOP, anchor=tk.W,
                                                                                          padx=10, pady=10)
         self.get_info()
 
@@ -580,13 +580,13 @@ class DataProcessing(tk.Tk):
         self.command_frm = tk.LabelFrame(self.main_frm, text='Выберите действие')
         self.command_frm.pack(side=tk.TOP)
 
-        tk.Button(self.command_frm, text='Удаление', command=self.delete, width=15).pack(side=tk.LEFT, padx=5, pady=5)
-        tk.Button(self.command_frm, text='Среднее', command=self.mean, width=15).pack(side=tk.LEFT, padx=5, pady=5)
-        tk.Button(self.command_frm, text='Медиана', command=self.median, width=15).pack(side=tk.LEFT, padx=5, pady=5)
-        tk.Button(self.command_frm, text='Заполнение 0', command=self.fill_zero, width=15).pack(side=tk.LEFT, padx=5,
+        ttk.Button(self.command_frm, text='Удаление', command=self.delete, width=15).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(self.command_frm, text='Среднее', command=self.mean, width=15).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(self.command_frm, text='Медиана', command=self.median, width=15).pack(side=tk.LEFT, padx=5, pady=5)
+        ttk.Button(self.command_frm, text='Заполнение 0', command=self.fill_zero, width=15).pack(side=tk.LEFT, padx=5,
                                                                                                 pady=5)
-        tk.Button(self.btn_frm, text='Отмена', command=self.cancel, width=12).pack(side=tk.RIGHT, padx=5, pady=5)
-        tk.Button(self.btn_frm, text='Сохранить', command=self.save, width=12).pack(side=tk.RIGHT, padx=5, pady=5)
+        ttk.Button(self.btn_frm, text='Отмена', command=self.cancel, width=12).pack(side=tk.RIGHT, padx=5, pady=5)
+        ttk.Button(self.btn_frm, text='Сохранить', command=self.save, width=12).pack(side=tk.RIGHT, padx=5, pady=5)
 
 
     def update(fn):

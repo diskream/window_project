@@ -80,7 +80,7 @@
 #         self.alg_box.grid(row=2, column=0)
 #         self.alg_box.current(0)
 #         self.update_title()
-#         self.alg_box_button = tk.Button(self, text='Enter', command=self.alg_configuration
+#         self.alg_box_button = ttk.Button(self, text='Enter', command=self.alg_configuration
 #                                         ).grid(row=2, column=1, sticky=tk.W)
 #
 #     def update_title(self):
@@ -113,7 +113,7 @@
 #             tk.Label(param_frame, text=params_list, justify=tk.LEFT).grid(row=11, column=0, columnspan=2, sticky=tk.W)
 #             return outer_self.get_clf(params, frame)
 #
-#         tk.Button(param_frame, text='Get params', command=lambda: get_tree_params(self, clf_frame), width=14).grid(
+#         ttk.Button(param_frame, text='Get params', command=lambda: get_tree_params(self, clf_frame), width=14).grid(
 #             row=10, column=1)
 #         params = {}
 #         default_params = {
@@ -174,7 +174,7 @@
 #                          text='Model accuracy: ' + str(out_self.accuracy)
 #                          ).grid(row=0, column=1)
 #
-#         tk.Button(frame, text='Fit the model',
+#         ttk.Button(frame, text='Fit the model',
 #                   command=lambda: process_model(frame, self, target.get(), split.get())
 #                   ).grid(row=4, column=0)
 #
@@ -191,7 +191,7 @@
 #             finally:
 #                 conn.close()
 #
-#         tk.Button(frame, text='Save model to database',
+#         ttk.Button(frame, text='Save model to database',
 #                   command=lambda: save_to_db(self.data, self.table,
 #                                              serialize(self.clf),
 #                                              self.accuracy)).place(x=290, y=90)
@@ -244,7 +244,7 @@
 #         self.graph_cb = ttk.Combobox(self.action_lb_frm, values=graph_lst)
 #         self.graph_cb.pack(side=tk.TOP, **self.pad)
 #         self.graph_cb.current(0)
-#         tk.Button(self.action_lb_frm, text='Выбрать', command=self.choose_plot).pack(side=tk.TOP, **self.pad)
+#         ttk.Button(self.action_lb_frm, text='Выбрать', command=self.choose_plot).pack(side=tk.TOP, **self.pad)
 #         self.current_plt = None
 #         self.choose_plot()
 #
@@ -277,7 +277,7 @@
 #         tk.Label(self, text='Hue :').grid(row=2, column=0, **_pad)
 #         self.hue_cb = ttk.Combobox(self, values=cols)
 #         self.hue_cb.grid(row=2, column=1, **_pad)
-#         tk.Button(self, text='Отобразить', command=self.plot).grid(row=3, column=0, columnspan=2, **_pad)
+#         ttk.Button(self, text='Отобразить', command=self.plot).grid(row=3, column=0, columnspan=2, **_pad)
 #
 #     def plot(self):
 #         self.figure_frm.pack_forget()

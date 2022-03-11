@@ -34,7 +34,7 @@ class ClassificationView(tk.Tk):
         self.lower_frm.pack(side=tk.BOTTOM)
         self.alg_cb.current(0)
         self.alg_cb.pack(side=tk.TOP, pady=10)
-        tk.Button(self.upper_frm, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
+        ttk.Button(self.upper_frm, text='Выбрать', command=self.get_alg).pack(side=tk.TOP, pady=5)
         self.update_title()
         self.dt_frm = DecisionTreeFrame(self, self.entry, self.pd_data)
         self.rf_frm = RandomForestFrame(self, self.entry, self.pd_data)
@@ -94,7 +94,7 @@ class DecisionTreeFrame(tk.Frame):
                '- random_state: управляет случайностью оценки;' \
                '- n_estimators: количество решающих деревьев.'
 
-        tk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
+        ttk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
                   command=lambda: messagebox.showinfo('Информация о параметрах', info)).pack(
             side=tk.TOP)
         ent_options = {
@@ -149,10 +149,10 @@ class DecisionTreeFrame(tk.Frame):
             'padx': 10,
             'pady': 5
         }
-        tk.Button(self.btn_frm, text='Подтвердить', command=self.fit).pack(**btn_pack)
-        tk.Button(self.btn_frm, text='ROC-кривая', command=self.get_roc).pack(**btn_pack)
-        tk.Button(self.btn_frm, text='Открыть дерево', command=self.get_tree).pack(**btn_pack)
-        tk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Подтвердить', command=self.fit).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='ROC-кривая', command=self.get_roc).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Открыть дерево', command=self.get_tree).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
         self.cv_var = tk.BooleanVar(self)
         self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)
@@ -287,7 +287,7 @@ class RandomForestFrame(DecisionTreeFrame):
                '- min_weight_fraction_leaf: минимальный вес узла;\n' + \
                '- random_state: управляет случайностью оценки.'
 
-        tk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
+        ttk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
                   command=lambda: messagebox.showinfo('Информация о параметрах', info)).pack(
             side=tk.TOP)
         ent_options = {
@@ -348,8 +348,8 @@ class RandomForestFrame(DecisionTreeFrame):
             'padx': 10,
             'pady': 5
         }
-        tk.Button(self.btn_frm, text='Подтвердить', command=lambda: self.fit(*extra_params)).pack(**btn_pack)
-        tk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Подтвердить', command=lambda: self.fit(*extra_params)).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
         self.cv_var = tk.BooleanVar(self)
         self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)
@@ -403,7 +403,7 @@ class KNeighborsFrame(DecisionTreeFrame):
                '- min_weight_fraction_leaf: минимальный вес узла;\n' + \
                '- random_state: управляет случайностью оценки.'
 
-        tk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
+        ttk.Button(self.clf_conf_lb_frm, text='Информация о параметрах',
                   command=lambda: messagebox.showinfo('Информация о параметрах', info)).pack(
             side=tk.TOP)
         ent_options = {
@@ -453,8 +453,8 @@ class KNeighborsFrame(DecisionTreeFrame):
             'padx': 10,
             'pady': 5
         }
-        tk.Button(self.btn_frm, text='Подтвердить', command=lambda: self.fit(**extra_params)).pack(**btn_pack)
-        tk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Подтвердить', command=lambda: self.fit(**extra_params)).pack(**btn_pack)
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
         self.cv_var = tk.BooleanVar(self)
         self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)

@@ -7,6 +7,7 @@ from functional_views.table_view import TableView
 from tkinter.filedialog import askopenfile
 from machine_learning.classification import ClassificationView
 from machine_learning.clustering import ClusteringView
+from machine_learning.neural_network import NNView
 from functional_views.data_views import DataView
 from functional_views.visualization import VisualisationView
 from tools.functions import serialize, get_db
@@ -23,7 +24,7 @@ class TopFrame(tk.Frame):
         self.db = get_db()
         self.insert_tv(self.db)
 
-        tk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP, pady=10)
+        ttk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP, pady=10)
         self.btn_lb_frm = tk.LabelFrame(self, text='Выбор действия')
         self.btn_lb_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
         self.btn_frm = tk.Frame(self.btn_lb_frm)
@@ -33,12 +34,16 @@ class TopFrame(tk.Frame):
             'padx': 10,
             'pady': 5
         }
-        tk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18).grid(row=1, column=0, **btn_pad)
-        tk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18).grid(row=0, column=0, **btn_pad)
-        tk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18).grid(row=0, column=1, **btn_pad)
-        tk.Button(self.btn_frm, text='Визуализация', command=self.open_visual, width=18).grid(row=0, column=2, **btn_pad)
-        tk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster, width=18).grid(row=1, column=1, **btn_pad)
-        tk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural, width=18).grid(row=1, column=2, **btn_pad)
+        ttk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18).grid(row=1, column=0, **btn_pad)
+        ttk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18).grid(row=0, column=0, **btn_pad)
+        ttk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18).grid(row=0, column=1,
+                                                                                              **btn_pad)
+        ttk.Button(self.btn_frm, text='Визуализация', command=self.open_visual, width=18).grid(row=0, column=2,
+                                                                                              **btn_pad)
+        ttk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster, width=18).grid(row=1, column=1,
+                                                                                                **btn_pad)
+        ttk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural, width=18).grid(row=1, column=2,
+                                                                                                **btn_pad)
 
         self.warn_var = tk.StringVar()
         self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
@@ -103,7 +108,9 @@ class TopFrame(tk.Frame):
                                       entry['variant_id'] if 'variant_id' in entry else None))
 
     def open_neural(self):
-        pass
+        entry = self.get_dict_entry()
+        NNView(self.get_entry(entry['table'], entry['task_id'],
+                              entry['variant_id'] if 'variant_id' in entry else None))
 
     def get_dict_entry(self):
         table = self.tv_hierarchy.item(self.tv_hierarchy.selection())
@@ -157,10 +164,10 @@ class BottomFrame(tk.LabelFrame):
         self.file_path_lbl = tk.Label(self, text='Путь к файлу: \n' + self.file_path, bg='#abcdef')
         self.file_path_lbl.pack(anchor=tk.N)
 
-        self.file_open_button = tk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=20)
+        self.file_open_button = ttk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=20)
         self.file_open_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        self.db_create_button = tk.Button(self.btn_frm, text='Добавить в таблицу Tasks', command=self.input_table,
+        self.db_create_button = ttk.Button(self.btn_frm, text='Добавить в таблицу Tasks', command=self.input_table,
                                           width=20)
         self.db_create_button.pack(side=tk.RIGHT, padx=10, pady=10)
 

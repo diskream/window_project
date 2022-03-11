@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from numpy import arange
-from tools.functions import serialize, deserialize, update_entry, save_model
+from tools.functions import deserialize, update_entry, save_model
 from sklearn.cluster import KMeans, DBSCAN
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -21,7 +21,7 @@ class ClusteringView(tk.Tk):
         self.alg_cb = ttk.Combobox(upper_frm, values=alg)
         self.alg_cb.pack(pady=10)
         self.alg_cb.current(0)
-        tk.Button(upper_frm, text='Выбрать', command=self.get_alg).pack(pady=5)
+        ttk.Button(upper_frm, text='Выбрать', command=self.get_alg).pack(pady=5)
         kmeans_frm = KMeansFrame(self, self.entry, self.pd_data)
         dbscan_frm = DBSCANFrame(self, self.entry, self.pd_data)
         self.algorithms = dict(zip(alg, [kmeans_frm, dbscan_frm]))
@@ -50,7 +50,7 @@ class KMeansFrame(tk.Frame):
         необходимо задать их правильное количество. Для этого выберите точку
         перегиба на графике ниже и занесите это количество в n_clusters."""
         tk.Label(lb_frm, text=elkan_info, justify=tk.LEFT).pack(pady=2)
-        tk.Button(lb_frm, text='Выбрать количество кластеров', command=self.get_elkan_graph).pack(pady=5)
+        ttk.Button(lb_frm, text='Выбрать количество кластеров', command=self.get_elkan_graph).pack(pady=5)
 
         self.conf_frm = tk.Frame(lb_frm)
         self.conf_frm.pack()
@@ -87,7 +87,7 @@ class KMeansFrame(tk.Frame):
         self.algorithm_cb.current(0)
         self.default_params['algorithm'] = self.algorithm_cb
 
-        tk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+        ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
         self.isFitted = False
 
         vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
@@ -98,9 +98,9 @@ class KMeansFrame(tk.Frame):
         self.col1_cb.grid(row=1, column=0, **pad)
         self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
         self.col2_cb.grid(row=1, column=1, **pad)
-        tk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+        ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
                                                                                       **pad)
-        tk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+        ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
 
     def fit(self):
         self.alg = self.get_alg()
