@@ -24,4 +24,6 @@ class App(tk.Tk):
 
 if __name__ == '__main__':
     app = App()
+    # app.tk.call('source', r'tools/Sun-Valley-ttk-theme-master/sun-valley.tcl')
+    # app.tk.call('set_theme', 'light')
     app.mainloop()

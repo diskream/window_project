@@ -1,8 +1,9 @@
-import sqlite3
 import pickle
 import tkinter as tk
 from tkinter import ttk
 from tools.models import *
+from keras.engine.sequential import Sequential
+from tensorflow.keras.utils import serialize_keras_object, deserialize_keras_object
 
 
 # Примечание: в функциях есть повторяющиейся строки с созданием соединения и курсора.
@@ -109,6 +110,8 @@ def serialize(file):
     :param file: данные для преобразование
     :return:
     """
+    if isinstance(file, Sequential):
+        return pickle.dumps(serialize_keras_object(file))
     return pickle.dumps(file)
 
 
@@ -222,7 +225,7 @@ def get_entry(table, **data):
         conn.close()
 
 
-def save_model(entry, clf, accuracy=None):
+def save_model(entry, clf, accuracy=None, name:str=None, clf_bin=False):
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
@@ -240,8 +243,11 @@ def save_model(entry, clf, accuracy=None):
             data['model_id'] = model_id
         except TypeError:
             data['model_id'] = 1
-        data['name'] = entry.name + f'_m_{data["model_id"]}' if not isinstance(entry.name, tuple) \
-            else entry.name[0] + f'_m_{data["model_id"]}'
+        if name:
+            data['name'] = name + f'_{data["model_id"]}'
+        else:
+            data['name'] = entry.name + f'_m_{data["model_id"]}' if not isinstance(entry.name, tuple) \
+                else entry.name[0] + f'_m_{data["model_id"]}'
         placeholders = ', '.join('?' for _ in data.values())  # форматирование данных для запроса
         cols = ', '.join(data.keys())  # форматирование названия колонок для запроса
         _sql = f'INSERT INTO Models ({cols}) VALUES ({placeholders})'

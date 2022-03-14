@@ -7,6 +7,8 @@ from tools.functions import show_table, update_entry, deserialize
 class TableView(tk.Tk):
     def __init__(self, db: bool, db_table=None, entry=None):
         tk.Tk.__init__(self)
+        # self.tk.call('source', r'tools/Sun-Valley-ttk-theme-master/sun-valley.tcl')
+        # self.tk.call('set_theme', 'light')
         self.geometry('1000x600')
         self.table_frm = tk.LabelFrame(self)
         self.table_frm.pack(fill=tk.BOTH, expand=True)
