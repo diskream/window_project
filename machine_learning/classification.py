@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, roc_curve, auc
 from tools.functions import deserialize, update_entry, save_model
 import pandas as pd
+from sqlite3 import connect
 # Для графиков
 import matplotlib
 from matplotlib.figure import Figure
@@ -153,6 +154,7 @@ class DecisionTreeFrame(tk.Frame):
         ttk.Button(self.btn_frm, text='ROC-кривая', command=self.get_roc).pack(**btn_pack)
         ttk.Button(self.btn_frm, text='Открыть дерево', command=self.get_tree).pack(**btn_pack)
         ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
+
         self.cv_var = tk.BooleanVar(self)
         self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)
@@ -250,6 +252,9 @@ class DecisionTreeFrame(tk.Frame):
 
     def save(self):
         save_model(self.entry, self.clf, self.accuracy)
+
+
+
 
 
 class RandomForestFrame(DecisionTreeFrame):

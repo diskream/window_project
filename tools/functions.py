@@ -225,7 +225,7 @@ def get_entry(table, **data):
         conn.close()
 
 
-def save_model(entry, clf, accuracy=None, name:str=None, clf_bin=False):
+def save_model(entry, clf, accuracy=None, name:str=None, path=False):
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
@@ -235,7 +235,7 @@ def save_model(entry, clf, accuracy=None, name:str=None, clf_bin=False):
             'variant_id': entry.variant_id,
             'name': None,
             'accuracy': accuracy if accuracy else None,
-            'bin_file': serialize(clf)
+            'bin_file': serialize(clf) if not path else None
         }
         try:
             model_id = cur.execute(f'SELECT MAX(model_id) FROM Models WHERE task_id = {data["task_id"]}'
@@ -248,6 +248,9 @@ def save_model(entry, clf, accuracy=None, name:str=None, clf_bin=False):
         else:
             data['name'] = entry.name + f'_m_{data["model_id"]}' if not isinstance(entry.name, tuple) \
                 else entry.name[0] + f'_m_{data["model_id"]}'
+        if path:
+            clf.save(path + data['name'])
+            data['bin_file'] = serialize(path + data['name'])
         placeholders = ', '.join('?' for _ in data.values())  # форматирование данных для запроса
         cols = ', '.join(data.keys())  # форматирование названия колонок для запроса
         _sql = f'INSERT INTO Models ({cols}) VALUES ({placeholders})'
