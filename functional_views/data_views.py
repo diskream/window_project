@@ -153,8 +153,7 @@ class DeleteWindow(tk.Tk):
 
         self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
         self.warn_lbl.pack(side=tk.TOP)
-        ttk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35,
-                  bg='#abcdef', activebackground='#a6caf0').pack(side=tk.TOP, fill=tk.X)
+        ttk.Button(self.action_frm, text='Удалить', command=self.del_col).pack(side=tk.TOP, fill=tk.X, pady=35)
 
     def del_col(self):
         """
