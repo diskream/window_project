@@ -167,7 +167,7 @@ class BottomFrame(ttk.LabelFrame):
         self.file_open_button = ttk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=20)
         self.file_open_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        self.db_create_button = ttk.Button(self.btn_frm, text='Добавить в таблицу Tasks', command=self.input_table,
+        self.db_create_button = ttk.Button(self.btn_frm, text='Добавить в БД', command=self.input_table,
                                           width=20)
         self.db_create_button.pack(side=tk.RIGHT, padx=10, pady=10)
 

@@ -12,6 +12,7 @@ from sqlite3 import connect
 import matplotlib
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import seaborn as sns
 
@@ -25,8 +26,8 @@ class ClassificationView(tk.Tk):
         self.entry = entry
         update_entry(self.entry)
         self.pd_data = deserialize(self.entry.table_file)
-        self.upper_frm = tk.LabelFrame(self, text='Выбор алгоритма')
-        self.upper_frm.pack(side=tk.TOP, fill=tk.X)
+        self.upper_frm = ttk.Labelframe(self, text='Выбор алгоритма')
+        self.upper_frm.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево решений',
                                                            'Случайный лес',
                                                            'k Ближайших соседей'],
@@ -65,12 +66,12 @@ class DecisionTreeFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.entry = entry
         self.pd_data = pd_data
-        self.clf_conf_lb_frm = tk.LabelFrame(self, text='Конфигурация дерева решений')
-        self.clf_conf_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.clf_conf_lb_frm = ttk.Labelframe(self, text='Конфигурация дерева решений')
+        self.clf_conf_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1, padx=5, pady=5)
         self.clf_conf_frm = tk.Frame(self.clf_conf_lb_frm)  # фрейм для установления объектов по центру
         self.clf_conf_frm.pack()
-        self.model_lb_frm = tk.LabelFrame(self, text='Конфигурация параметров обучения')
-        self.model_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+        self.model_lb_frm = ttk.Labelframe(self, text='Конфигурация параметров обучения')
+        self.model_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1, padx=5, pady=5)
         self.model_frm_l = tk.Frame(self.model_lb_frm)
         self.model_frm_l.pack(side=tk.LEFT)
         self.model_frm_r = tk.Frame(self.model_lb_frm)
@@ -103,31 +104,31 @@ class DecisionTreeFrame(tk.Frame):
             'justify': tk.CENTER
         }
         tk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
-        self.criterion_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
+        self.criterion_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
         self.criterion_ent.grid(row=1, column=0, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
-        self.max_depth_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
+        self.max_depth_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
         self.max_depth_ent.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
-        self.min_samples_split_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
+        self.min_samples_split_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
                                               **ent_options)
         self.min_samples_split_ent.grid(row=1, column=2, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
-        self.min_samples_leaf_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
+        self.min_samples_leaf_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
                                              **ent_options)
         self.min_samples_leaf_ent.grid(row=3, column=0, padx=5, pady=10)
 
         tk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
-        self.min_weight_fraction_leaf_ent = tk.Entry(self.clf_conf_frm,
+        self.min_weight_fraction_leaf_ent = ttk.Entry(self.clf_conf_frm,
                                                      textvariable=self.default_params['min_weight_fraction_leaf'],
                                                      **ent_options)
         self.min_weight_fraction_leaf_ent.grid(row=3, column=1, padx=5, pady=10)
 
         tk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
-        self.random_state_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
+        self.random_state_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
                                          **ent_options)
         self.random_state_ent.grid(row=3, column=2, padx=5, pady=10)
         model_pack = {
@@ -142,7 +143,7 @@ class DecisionTreeFrame(tk.Frame):
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
         self.check_var = tk.BooleanVar(self)
-        self.check_split = tk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
+        self.check_split = ttk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
                                           variable=self.check_var, onvalue=True, offvalue=False)
         self.check_split.pack(**model_pack)
         btn_pack = {
@@ -156,7 +157,7 @@ class DecisionTreeFrame(tk.Frame):
         ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
 
         self.cv_var = tk.BooleanVar(self)
-        self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
+        self.check_cv = ttk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)
 
         self.accuracy = '...'
@@ -248,13 +249,22 @@ class DecisionTreeFrame(tk.Frame):
         DecisionTreeModelInfo(self.clf, self.isSplitted, *self.get_split_data())
 
     def get_tree(self):
-        DecisionTreePlot(self.clf, self.feature_names, self.class_names)
+        plt.figure(1, figsize=(16, 9), dpi=500)
+        plot_tree(self.clf,
+                  feature_names=self.feature_names,
+                  class_names=self.class_names.astype(str),
+                  filled=True)
+        plt.savefig('other/temp/tree.png')
+        plt.clf()
+        fig = plt.figure(1, figsize=(16, 9), dpi=500)
+        fig.tight_layout()
+        img = mpimg.imread('other/temp/tree.png')
+        plt.imshow(img)
+        plt.show()
+
 
     def save(self):
         save_model(self.entry, self.clf, self.accuracy)
-
-
-
 
 
 class RandomForestFrame(DecisionTreeFrame):
@@ -262,11 +272,11 @@ class RandomForestFrame(DecisionTreeFrame):
         tk.Frame.__init__(self, parent)
         self.entry = entry
         self.pd_data = pd_data
-        self.clf_conf_lb_frm = tk.LabelFrame(self, text='Конфигурация случайного леса')
+        self.clf_conf_lb_frm = ttk.Labelframe(self, text='Конфигурация случайного леса')
         self.clf_conf_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.clf_conf_frm = tk.Frame(self.clf_conf_lb_frm)  # фрейм для установления объектов по центру
         self.clf_conf_frm.pack()
-        self.model_lb_frm = tk.LabelFrame(self, text='Конфигурация параметров обучения')
+        self.model_lb_frm = ttk.Labelframe(self, text='Конфигурация параметров обучения')
         self.model_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.model_frm_l = tk.Frame(self.model_lb_frm)
         self.model_frm_l.pack(side=tk.LEFT)
@@ -300,35 +310,35 @@ class RandomForestFrame(DecisionTreeFrame):
             'justify': tk.CENTER
         }
         tk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
-        self.criterion_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
+        self.criterion_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
         self.criterion_ent.grid(row=1, column=0, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
-        self.max_depth_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
+        self.max_depth_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
         self.max_depth_ent.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
-        self.min_samples_split_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
+        self.min_samples_split_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
                                               **ent_options)
         self.min_samples_split_ent.grid(row=1, column=2, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
-        self.min_samples_leaf_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
+        self.min_samples_leaf_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
                                              **ent_options)
         self.min_samples_leaf_ent.grid(row=3, column=0, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
-        self.min_weight_fraction_leaf_ent = tk.Entry(self.clf_conf_frm,
+        self.min_weight_fraction_leaf_ent = ttk.Entry(self.clf_conf_frm,
                                                      textvariable=self.default_params['min_weight_fraction_leaf'],
                                                      **ent_options)
         self.min_weight_fraction_leaf_ent.grid(row=3, column=1, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
-        self.random_state_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
+        self.random_state_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
                                          **ent_options)
         self.random_state_ent.grid(row=3, column=2, padx=5, pady=5)
         tk.Label(self.clf_conf_frm, text='n_estimators').grid(row=4, column=0, padx=5)
-        self.n_estimators_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_estimators'],
+        self.n_estimators_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_estimators'],
                                          **ent_options)
         self.n_estimators_ent.grid(row=5, column=0, padx=5, pady=5)
         # Доп параметры, которых нет в родительском классе DecisionTreeFrame
@@ -345,7 +355,7 @@ class RandomForestFrame(DecisionTreeFrame):
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
         self.check_var = tk.BooleanVar(self)
-        self.check_split = tk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
+        self.check_split = ttk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
                                           variable=self.check_var, onvalue=True, offvalue=False)
         self.check_split.pack(**model_pack)
         btn_pack = {
@@ -356,7 +366,7 @@ class RandomForestFrame(DecisionTreeFrame):
         ttk.Button(self.btn_frm, text='Подтвердить', command=lambda: self.fit(*extra_params)).pack(**btn_pack)
         ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
         self.cv_var = tk.BooleanVar(self)
-        self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
+        self.check_cv = ttk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)
 
         self.accuracy = '...'
@@ -380,11 +390,11 @@ class KNeighborsFrame(DecisionTreeFrame):
         tk.Frame.__init__(self, parent)
         self.entry = entry
         self.pd_data = pd_data
-        self.clf_conf_lb_frm = tk.LabelFrame(self, text='Конфигурация k ближайших соседей')
+        self.clf_conf_lb_frm = ttk.Labelframe(self, text='Конфигурация k ближайших соседей')
         self.clf_conf_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.clf_conf_frm = tk.Frame(self.clf_conf_lb_frm)  # фрейм для установления объектов по центру
         self.clf_conf_frm.pack()
-        self.model_lb_frm = tk.LabelFrame(self, text='Конфигурация параметров обучения')
+        self.model_lb_frm = ttk.Labelframe(self, text='Конфигурация параметров обучения')
         self.model_lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.model_frm_l = tk.Frame(self.model_lb_frm)
         self.model_frm_l.pack(side=tk.LEFT)
@@ -416,24 +426,24 @@ class KNeighborsFrame(DecisionTreeFrame):
             'justify': tk.CENTER
         }
         tk.Label(self.clf_conf_frm, text='n_neighbors').grid(row=0, column=0, padx=5)
-        self.n_neighbors_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_neighbors'],
+        self.n_neighbors_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_neighbors'],
                                         **ent_options)
         self.n_neighbors_ent.grid(row=1, column=0, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='weights').grid(row=0, column=1, padx=5)
-        self.weights_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['weights'], **ent_options)
+        self.weights_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['weights'], **ent_options)
         self.weights_ent.grid(row=1, column=1, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='algorithm').grid(row=0, column=2, padx=5)
-        self.algorithm_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['algorithm'], **ent_options)
+        self.algorithm_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['algorithm'], **ent_options)
         self.algorithm_ent.grid(row=1, column=2, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='leaf_size').grid(row=2, column=0, padx=5)
-        self.leaf_size_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['leaf_size'], **ent_options)
+        self.leaf_size_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['leaf_size'], **ent_options)
         self.leaf_size_ent.grid(row=3, column=0, padx=5, pady=5)
 
         tk.Label(self.clf_conf_frm, text='p').grid(row=2, column=1, padx=5)
-        self.p_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['p'], **ent_options)
+        self.p_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['p'], **ent_options)
         self.p_ent.grid(row=3, column=1, padx=5, pady=5)
         # Доп параметры, которых нет в родительском классе DecisionTreeFrame
         extra_params = {'params': [self.n_neighbors_ent, self.weights_ent, self.algorithm_ent, self.leaf_size_ent,
@@ -450,7 +460,7 @@ class KNeighborsFrame(DecisionTreeFrame):
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
         self.check_var = tk.BooleanVar(self)
-        self.check_split = tk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
+        self.check_split = ttk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
                                           variable=self.check_var, onvalue=True, offvalue=False)
         self.check_split.pack(**model_pack)
         btn_pack = {
@@ -461,7 +471,7 @@ class KNeighborsFrame(DecisionTreeFrame):
         ttk.Button(self.btn_frm, text='Подтвердить', command=lambda: self.fit(**extra_params)).pack(**btn_pack)
         ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).pack(**btn_pack)
         self.cv_var = tk.BooleanVar(self)
-        self.check_cv = tk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
+        self.check_cv = ttk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                        offvalue=False)
 
         self.accuracy = '...'
