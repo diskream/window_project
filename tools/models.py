@@ -60,12 +60,13 @@ class Model:
     """
     Класс для таблицы Models
     """
-    def __init__(self, model_id: int, task_id: int, variant_id: int, name: str, acc: float, bin_file=None):
+    def __init__(self, model_id: int, variant_id: int, task_id: int, name: str, acc: float, bin_file=None, desc=None):
         self.model_id = model_id
-        self.task_id = task_id
         self.variant_id = variant_id
+        self.task_id = task_id
         self.name = name
         self.acc = acc
+        self.desc = desc
         self.table = 'Models'
         if bin_file:
             self.bin = bin_file

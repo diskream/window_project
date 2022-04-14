@@ -6,11 +6,11 @@ from functional_views.main_window_frames import TopFrame, BottomFrame
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        print(self.winfo_screenwidth(), self.winfo_screenheight())
-        self.HEIGHT = 700
+        self.w, self.h = self.winfo_screenwidth(), self.winfo_screenheight()
+        self.HEIGHT = self.h // 2
         self.WIDTH = (7 * self.HEIGHT) // 9
         self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
-        self.title('Дипломный проект v0.036a')
+        self.title('Дипломный проект v0.068a')
 
         self.table_list_frame = TopFrame(self)
         self.table_list_frame.pack(fill=tk.BOTH, side=tk.TOP, expand=True)

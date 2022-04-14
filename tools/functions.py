@@ -258,3 +258,14 @@ def save_model(entry, clf, accuracy=None, name:str=None, path=False):
     finally:
         conn.commit()
         conn.close()
+
+def get_models_list() -> list:
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    try:
+        models = []
+        for model in cur.execute('SELECT name FROM Models').fetchall():
+            models.append(model[0])
+        return models
+    finally:
+        conn.close()

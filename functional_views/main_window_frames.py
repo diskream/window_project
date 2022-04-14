@@ -23,7 +23,9 @@ class TopFrame(ttk.Frame):
         self.tv_hierarchy.pack(side=tk.TOP)
         self.db = get_db()
         self.insert_tv(self.db)
-
+        w = {
+            'width': 17
+        }
         ttk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP, pady=10)
         self.btn_lb_frm = ttk.LabelFrame(self, text='Выбор действия')
         self.btn_lb_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5, padx=5)
@@ -34,15 +36,15 @@ class TopFrame(ttk.Frame):
             'padx': 10,
             'pady': 5
         }
-        ttk.Button(self.btn_frm, text='Классификация', command=self.open_ml).grid(row=1, column=0, **btn_pad)
-        ttk.Button(self.btn_frm, text='Обзор данных', command=self.open_table).grid(row=0, column=0, **btn_pad)
-        ttk.Button(self.btn_frm, text='Редактирование', command=self.open_data).grid(row=0, column=1,
+        ttk.Button(self.btn_frm, text='Классификация', command=self.open_ml, **w).grid(row=1, column=0, **btn_pad)
+        ttk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, **w).grid(row=0, column=0, **btn_pad)
+        ttk.Button(self.btn_frm, text='Редактирование', command=self.open_data, **w).grid(row=0, column=1,
                                                                                               **btn_pad)
-        ttk.Button(self.btn_frm, text='Визуализация', command=self.open_visual).grid(row=0, column=2,
+        ttk.Button(self.btn_frm, text='Визуализация', command=self.open_visual, **w).grid(row=0, column=2,
                                                                                               **btn_pad)
-        ttk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster).grid(row=1, column=1,
+        ttk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster, **w).grid(row=1, column=1,
                                                                                                 **btn_pad)
-        ttk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural).grid(row=1, column=2,
+        ttk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural, **w).grid(row=1, column=2,
                                                                                                 **btn_pad)
 
         self.warn_var = tk.StringVar()
@@ -136,7 +138,8 @@ class TopFrame(ttk.Frame):
 
     def update_table(self):
         self.tv_hierarchy.delete(*self.tv_hierarchy.get_children())
-        self.insert_tv(get_db())
+        self.db = get_db()
+        self.insert_tv(self.db)
 
     @staticmethod
     def get_tables_list():
