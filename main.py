@@ -9,7 +9,7 @@ class App(tk.Tk):
         self.w, self.h = self.winfo_screenwidth(), self.winfo_screenheight()
         self.HEIGHT = self.h // 2
         self.WIDTH = (7 * self.HEIGHT) // 9
-        self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
+        # self.geometry(f'{self.WIDTH}x{self.HEIGHT}')
         self.title('Дипломный проект v0.068a')
 
         self.table_list_frame = TopFrame(self)

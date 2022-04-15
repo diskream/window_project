@@ -108,19 +108,7 @@ class WorkWithModel(ttk.LabelFrame):
         # Обзор модели
         self.model_overview = ttk.Label(model_overview, text=self.get_model_overview(), justify=tk.LEFT)
         self.model_overview.pack(side=tk.LEFT, anchor=tk.N, **pad)
-        # Управление моделью
-        ttk.Label(model_management, text='Изменение названия модели:').grid(row=0, column=0, columnspan=2, **pad)
-        self.new_name_ent = ttk.Entry(model_management)
-        self.new_name_ent.grid(row=1, column=0, **pad)
-        ttk.Button(model_management, text='Подтвердить', command=self.update_name).grid(row=1, column=1, **pad)
-        ttk.Label(model_management, text='Удаление модели:').grid(row=2, column=0, columnspan=2, **pad)
-        ttk.Button(model_management, text='Удалить модель', command=self.delete_model).grid(row=3, column=0,
-                                                                                            columnspan=2,**pad)
-
-        ttk.Label(model_management, text='Изменение описания модели:').grid(row=0, column=2, columnspan=2, **pad)
-        self.description_text = tk.Text(model_management, width=30, height=5)
-        self.description_text.grid(row=1, column=2, columnspan=2, rowspan=6, **pad)
-        # Управление моделью
+        # Запрос к модели
         ttk.Label(model_query, text='Выберите таблицу БД:').grid(row=0, column=0, **pad)
         self.table_selection_cb = ttk.Combobox(model_query, values=['Tasks', 'Task_variant'])
         self.table_selection_cb.grid(row=0, column=1, **pad)
@@ -132,6 +120,17 @@ class WorkWithModel(ttk.LabelFrame):
         self.get_data_list()
         ttk.Button(model_query, text='Выбрать', command=self.get_data).grid(row=1, column=2, **pad)
         self.data = None
+        # Управление моделью
+        ttk.Label(model_management, text='Изменение названия модели:').grid(row=0, column=0, columnspan=2, **pad)
+        self.new_name_ent = ttk.Entry(model_management)
+        self.new_name_ent.grid(row=1, column=0, **pad)
+        ttk.Button(model_management, text='Подтвердить', command=self.update_name).grid(row=1, column=1, **pad)
+        ttk.Label(model_management, text='Удаление модели:').grid(row=2, column=0, columnspan=2, **pad)
+        ttk.Button(model_management, text='Удалить модель', command=self.delete_model).grid(row=3, column=0,
+                                                                                            columnspan=2,**pad)
+        ttk.Label(model_management, text='Изменение описания модели:').grid(row=0, column=2, columnspan=2, **pad)
+        self.description_text = tk.Text(model_management, width=30, height=5)
+        self.description_text.grid(row=1, column=2, columnspan=2, rowspan=6, **pad)
 
     def get_data_list(self):
         table = self.table_selection_cb.get()

@@ -38,7 +38,7 @@ class DataView(tk.Tk):
         self.table_frm = ttk.LabelFrame(self, height=self.HEIGHT * 0.77)
         self.table_frm.pack(fill=tk.BOTH, expand=True)
         self.action_frm = ttk.Frame(self)
-        self.action_frm.pack(fill=tk.BOTH, expand=True)
+        self.action_frm.pack(fill=tk.X)
         self.tv1_frm = ttk.Frame(self.table_frm)
         self.tv1_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.tv2_frm = ttk.Frame(self.table_frm, height=10)
@@ -54,9 +54,9 @@ class DataView(tk.Tk):
         self.warn_lbl.pack(anchor=tk.N)
         self.null_columns = None
         # Лейбл, отображающий количество пустых значений
-        self.isnull_lbl = ttk.Label(self.action_frm, text=self.check_empty())
-        self.isnull_lbl.pack(anchor=tk.NW)
-
+        # self.isnull_lbl = ttk.Label(self.action_frm, text=self.check_empty())
+        # self.isnull_lbl.pack(anchor=tk.NW)
+        self.check_empty()
         # Кнопки действий
         ttk.Button(self.af1_frm, text='Преобразование данных',
                   command=self.data_preparation).pack(side=tk.LEFT, pady=20, padx=20)
@@ -108,10 +108,10 @@ class DataView(tk.Tk):
                 if ser.nunique() == 2:
                     isnull_cols.append(col)
             self.null_columns = isnull_cols
-            if len(isnull_cols) <= 3:
-                return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
-            else:
-                return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
+            # if len(isnull_cols) <= 3:
+            #     return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
+            # else:
+            #     return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
 
     def close(self):
         self.destroy()
@@ -125,7 +125,6 @@ class DeleteWindow(tk.Tk):
     def __init__(self, entry, pd_data, parent, height):
         tk.Tk.__init__(self)
 
-        self.geometry('500x500')
         self.parent = parent
         self.HEIGHT = height
         self.entry = entry
@@ -486,7 +485,6 @@ class DataPreparation(tk.Tk):
         self.HEIGHT = height
         self.parent = parent
         # self.geometry(f'{width}x{height}')
-        self.geometry('500x500')
         self.entry = entry
         self.title('Преобразование данных ' + self.entry.name)
         self.is_edited = False
@@ -570,8 +568,6 @@ class DataProcessing(tk.Tk):
         self.info_frm = ttk.LabelFrame(self.main_frm, text='Информация', height=200)
         self.info_frm.pack(side=tk.TOP)
         self.is_edited = False
-
-        self.geometry('500x500')
 
         self.info_lbl = ttk.Label(self.info_frm, text=self.get_info(), justify=tk.LEFT)
         self.info_lbl.pack(side=tk.TOP, pady=5)
