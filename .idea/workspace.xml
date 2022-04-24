@@ -5,32 +5,54 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="65c3d264-137d-4909-a75b-9442a773911e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/DB_create_query.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat.len" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat.values" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat.values.at" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat.values.s" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat_i" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/entities/entities.dat_i.len" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b4474be8-45ac-4359-8ce4-0e4a9b6a2c94/storage_v2/_src_/schema/main.uQUzAA.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/main.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machine_learning/clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/machine_learning/clustering.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+        <option value="Jupyter Notebook" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
   <component name="ProjectId" id="21V9MX28FtMkYpIwjQrHVI92NX6" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -40,13 +62,70 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/tools" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager">
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="F:\python\window_project\tools" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="F:\python\window_project\functional_views\" />
+      <recent name="F:\python\window_project\other" />
+      <recent name="F:\python\window_project\other\" />
+      <recent name="F:\python\window_project\tools" />
+      <recent name="F:\python\window_project\machine_learning" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.main">
+    <configuration name="asd" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="window_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/asd.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="classification" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="window_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="F:\python\window_project\machine_learning\classification.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="window_project" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -69,9 +148,57 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="window_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="window_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/trash" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/trash/test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.test" />
+        <item itemvalue="Python.temp" />
+        <item itemvalue="Python.classification" />
+        <item itemvalue="Python.asd" />
       </list>
     </recent_temporary>
   </component>
@@ -84,13 +211,354 @@
       <option name="presentableId" value="Default" />
       <updated>1638015342737</updated>
       <workItem from="1638015345358" duration="4946000" />
+      <workItem from="1638185394856" duration="2734000" />
+      <workItem from="1638199996680" duration="4539000" />
+      <workItem from="1638464500571" duration="7000" />
+      <workItem from="1638616246714" duration="61000" />
+      <workItem from="1638619907693" duration="1185000" />
+      <workItem from="1639389010300" duration="1113000" />
+      <workItem from="1639464486435" duration="67000" />
+      <workItem from="1644228240619" duration="5490000" />
+      <workItem from="1644311737198" duration="15067000" />
+      <workItem from="1644480617557" duration="17012000" />
+      <workItem from="1644568269828" duration="11171000" />
+      <workItem from="1644823776721" duration="25024000" />
+      <workItem from="1644908227988" duration="12678000" />
+      <workItem from="1645001062450" duration="6846000" />
+      <workItem from="1645039314087" duration="35000" />
+      <workItem from="1645105522191" duration="619000" />
+      <workItem from="1645173710010" duration="6153000" />
+      <workItem from="1645248003537" duration="179000" />
+      <workItem from="1645426692012" duration="16665000" />
+      <workItem from="1645469759532" duration="108000" />
+      <workItem from="1645699392593" duration="6142000" />
+      <workItem from="1646034306542" duration="14534000" />
+      <workItem from="1646073020862" duration="4314000" />
+      <workItem from="1646126967518" duration="6815000" />
+      <workItem from="1646135048639" duration="3736000" />
+      <workItem from="1646140867586" duration="8806000" />
+      <workItem from="1646151331379" duration="163000" />
+      <workItem from="1646210714325" duration="14612000" />
+      <workItem from="1646297114308" duration="9587000" />
+      <workItem from="1646319028634" duration="2771000" />
+      <workItem from="1646548994004" duration="72000" />
+      <workItem from="1646812741463" duration="11320000" />
+      <workItem from="1646831570338" duration="11302000" />
+      <workItem from="1646896894924" duration="7652000" />
+      <workItem from="1646987797277" duration="12678000" />
+      <workItem from="1647000796293" duration="714000" />
+      <workItem from="1647248502176" duration="23324000" />
+      <workItem from="1647332201881" duration="5530000" />
+      <workItem from="1647342977879" duration="6537000" />
+      <workItem from="1647419519670" duration="1257000" />
+      <workItem from="1647596550430" duration="116000" />
+      <workItem from="1647599047619" duration="500000" />
+      <workItem from="1647612535108" duration="696000" />
+      <workItem from="1647770908538" duration="50000" />
+      <workItem from="1648124986531" duration="2799000" />
+      <workItem from="1648211838045" duration="309000" />
+      <workItem from="1648394458870" duration="48000" />
+      <workItem from="1648544586666" duration="2040000" />
+      <workItem from="1648565597675" duration="7378000" />
+      <workItem from="1648729267324" duration="1008000" />
+      <workItem from="1649923021874" duration="17981000" />
+      <workItem from="1650030977822" duration="1721000" />
     </task>
+    <task id="LOCAL-00001" summary="new update">
+      <created>1639389067341</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1639389067341</updated>
+    </task>
+    <task id="LOCAL-00002" summary="new update">
+      <created>1644233537071</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1644233537071</updated>
+    </task>
+    <task id="LOCAL-00003" summary="data">
+      <created>1644320789324</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1644320789324</updated>
+    </task>
+    <task id="LOCAL-00004" summary="data">
+      <created>1644490258350</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1644490258350</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Разделение на несколько файлов">
+      <created>1644492550303</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1644492550303</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Сделал логику иерархии в списке из БД">
+      <created>1644499546949</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1644499546949</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Работа над связью с БД">
+      <created>1644827378451</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1644827378451</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Создал классы для таблиц и переделал запись в таблицу через классы">
+      <created>1644842993903</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1644842993903</updated>
+    </task>
+    <task id="LOCAL-00009" summary="все сломал (опять)">
+      <created>1644852059006</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1644852059006</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Починил окно редактирования и сделал удаление колонок">
+      <created>1644922047372</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1644922047372</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Сделал возможность редактирования данных из таблицы Tasks">
+      <created>1645010270555</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1645010270555</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Добавил окно с описательной статистикой">
+      <created>1645248118674</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1645248118674</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Сделал окно перевода данных в целочисленный тип, сделал окно с добавление колонок в таблицу,&#10;исправил класс DeleteWindow">
+      <created>1645446714312</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1645446714312</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Обновление DataWindow">
+      <created>1645469777248</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1645469777248</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Доделал функциональную часть обработки данных">
+      <created>1645705612707</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1645705612707</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Доделал функциональную часть обработки данных 2">
+      <created>1646044764722</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1646044764722</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Сделал окно с классификацией; Добавил объекты в Дерево решений">
+      <created>1646057618594</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1646057618594</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Работает классификация! Улучшения в процессе...">
+      <created>1646077470600</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1646077470600</updated>
+    </task>
+    <task id="LOCAL-00019" summary="В классификации работает окно с ROC кривой, добавлена кросс-валидация">
+      <created>1646151486693</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1646151486693</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Beta-сборка классификации)">
+      <created>1646226507980</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1646226507980</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Починил (не до конца) окно с обзором данных">
+      <created>1646300790319</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1646300790319</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Навел порядок в файлах, сгруппировал по папкам">
+      <created>1646302242694</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1646302242694</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Синхронизация">
+      <created>1646549044491</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1646549044491</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Визуализация работает">
+      <created>1646824009365</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1646824009365</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Кластеризация, сделал метод локтя">
+      <created>1646847472846</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1646847472846</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Работает кластеризация методом KMEANS; исправил ошибку, при которой индекс в названии данных не заменялся, а увеличивался">
+      <created>1646904676158</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1646904676158</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Работают нейронные сети. Пока что в тестовом формате, без сохранения в БД.&#10;Обновил все кнопочки, теперь красивые">
+      <created>1647000452477</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1647000452477</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Борюсь с сохранением обученной нейронной сети в БД">
+      <created>1647274913664</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1647274913664</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Обновление нейронок">
+      <created>1647341361464</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1647341361464</updated>
+    </task>
+    <task id="LOCAL-00030" summary="обновление">
+      <created>1648127866728</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1648127866728</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Обновление интерфейса + дерево решений">
+      <created>1648574373308</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1648574373308</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Обновление интерфейса, фикс бага с обновлением таблицы, управление моделью классификации">
+      <created>1649943891840</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1649943891840</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/window_project$main.coverage" NAME="main Coverage Results" MODIFIED="1638019567426" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list>
+              <RecentGroup>
+                <option name="FILTER_VALUES">
+                  <option value="HEAD" />
+                </option>
+              </RecentGroup>
+            </list>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Создал классы для таблиц и переделал запись в таблицу через классы" />
+    <MESSAGE value="все сломал (опять)" />
+    <MESSAGE value="Починил окно редактирования и сделал удаление колонок" />
+    <MESSAGE value="Сделал возможность редактирования данных из таблицы Tasks" />
+    <MESSAGE value="Добавил окно с описательной статистикой" />
+    <MESSAGE value="Сделал окно перевода данных в целочисленный тип, сделал окно с добавление колонок в таблицу,&#10;исправил класс DeleteWindow" />
+    <MESSAGE value="Обновление DataWindow" />
+    <MESSAGE value="Доделал функциональную часть обработки данных" />
+    <MESSAGE value="Доделал функциональную часть обработки данных 2" />
+    <MESSAGE value="Сделал окно с классификацией; Добавил объекты в Дерево решений" />
+    <MESSAGE value="Работает классификация! Улучшения в процессе..." />
+    <MESSAGE value="В классификации работает окно с ROC кривой, добавлена кросс-валидация" />
+    <MESSAGE value="Beta-сборка классификации)" />
+    <MESSAGE value="Починил (не до конца) окно с обзором данных" />
+    <MESSAGE value="Навел порядок в файлах, сгруппировал по папкам" />
+    <MESSAGE value="Синхронизация" />
+    <MESSAGE value="Визуализация работает" />
+    <MESSAGE value="Кластеризация, сделал метод локтя" />
+    <MESSAGE value="Работает кластеризация методом KMEANS; исправил ошибку, при которой индекс в названии данных не заменялся, а увеличивался" />
+    <MESSAGE value="Работают нейронные сети. Пока что в тестовом формате, без сохранения в БД.&#10;Обновил все кнопочки, теперь красивые" />
+    <MESSAGE value="Борюсь с сохранением обученной нейронной сети в БД" />
+    <MESSAGE value="Обновление нейронок" />
+    <MESSAGE value="обновление" />
+    <MESSAGE value="Обновление интерфейса + дерево решений" />
+    <MESSAGE value="Обновление интерфейса, фикс бага с обновлением таблицы, управление моделью классификации" />
+    <option name="LAST_COMMIT_MESSAGE" value="Обновление интерфейса, фикс бага с обновлением таблицы, управление моделью классификации" />
   </component>
 </project>
