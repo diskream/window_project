@@ -225,7 +225,7 @@ def get_entry(table, **data):
         conn.close()
 
 
-def save_model(entry, clf, accuracy=None, name:str=None, path=False):
+def save_model(entry, clf, accuracy=None, name:str=None, desc:str=None, path=False):
     conn = sqlite3.connect('main.sqlite3')
     cur = conn.cursor()
     try:
@@ -235,7 +235,8 @@ def save_model(entry, clf, accuracy=None, name:str=None, path=False):
             'variant_id': entry.variant_id,
             'name': None,
             'accuracy': accuracy if accuracy else None,
-            'bin_file': serialize(clf) if not path else None
+            'bin_file': serialize(clf) if not path else None,
+            'description': desc if desc else None
         }
         try:
             model_id = cur.execute(f'SELECT MAX(model_id) FROM Models WHERE task_id = {data["task_id"]}'
