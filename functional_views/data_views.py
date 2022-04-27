@@ -35,28 +35,28 @@ class DataView(tk.Tk):
         self.pd_data = deserialize(self.entry.table_file)
 
         # Создание фреймов для корректного распределения элементов по окну
-        self.table_frm = tk.LabelFrame(self, height=self.HEIGHT * 0.77)
+        self.table_frm = ttk.LabelFrame(self, height=self.HEIGHT * 0.77)
         self.table_frm.pack(fill=tk.BOTH, expand=True)
-        self.action_frm = tk.Frame(self)
-        self.action_frm.pack(fill=tk.BOTH, expand=True)
-        self.tv1_frm = tk.Frame(self.table_frm)
+        self.action_frm = ttk.Frame(self)
+        self.action_frm.pack(fill=tk.X)
+        self.tv1_frm = ttk.Frame(self.table_frm)
         self.tv1_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.tv2_frm = tk.Frame(self.table_frm, height=10)
+        self.tv2_frm = ttk.Frame(self.table_frm, height=10)
         self.tv2_frm.pack(side=tk.TOP, fill=tk.X)
-        self.af1_frm = tk.Frame(self.action_frm)
+        self.af1_frm = ttk.Frame(self.action_frm)
         self.af1_frm.pack(side=tk.BOTTOM)
         # Создание таблицы
         self.tv = ttk.Treeview(self.tv1_frm, show='headings', style='Treeview')
         show_table(self)
         # lbl - область текста, var - текстовые переменные, в которых хранятся сообщения
         self.warn_var = tk.StringVar()
-        self.warn_lbl = tk.Label(self.action_frm, textvariable=self.warn_var)
+        self.warn_lbl = ttk.Label(self.action_frm, textvariable=self.warn_var)
         self.warn_lbl.pack(anchor=tk.N)
         self.null_columns = None
         # Лейбл, отображающий количество пустых значений
-        self.isnull_lbl = tk.Label(self.action_frm, text=self.check_empty())
-        self.isnull_lbl.pack(anchor=tk.NW)
-
+        # self.isnull_lbl = ttk.Label(self.action_frm, text=self.check_empty())
+        # self.isnull_lbl.pack(anchor=tk.NW)
+        self.check_empty()
         # Кнопки действий
         ttk.Button(self.af1_frm, text='Преобразование данных',
                   command=self.data_preparation).pack(side=tk.LEFT, pady=20, padx=20)
@@ -64,7 +64,7 @@ class DataView(tk.Tk):
         ttk.Button(self.af1_frm, text='Добавление колонки', command=self.add_column).pack(side=tk.LEFT, pady=20, padx=20)
         ttk.Button(self.af1_frm, text='Обработка пустых значений', command=self.empty_data).pack(side=tk.LEFT, pady=20,
                                                                                                 padx=20)
-        ttk.Button(self.af1_frm, text='Информация по данным', command=self.description).pack(side=tk.LEFT, pady=20,
+        ttk.Button(self.af1_frm, text='Описательная статистика', command=self.description).pack(side=tk.LEFT, pady=20,
                                                                                             padx=20)
 
     def data_preparation(self):
@@ -108,10 +108,10 @@ class DataView(tk.Tk):
                 if ser.nunique() == 2:
                     isnull_cols.append(col)
             self.null_columns = isnull_cols
-            if len(isnull_cols) <= 3:
-                return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
-            else:
-                return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
+            # if len(isnull_cols) <= 3:
+            #     return 'Пропущены значения в следующих столбцах:\n' + '\n'.join(isnull_cols)
+            # else:
+            #     return 'Пропущены значения в следующем количестве столбцов: ' + str(len(isnull_cols))
 
     def close(self):
         self.destroy()
@@ -125,7 +125,6 @@ class DeleteWindow(tk.Tk):
     def __init__(self, entry, pd_data, parent, height):
         tk.Tk.__init__(self)
 
-        self.geometry('500x500')
         self.parent = parent
         self.HEIGHT = height
         self.entry = entry
@@ -133,28 +132,28 @@ class DeleteWindow(tk.Tk):
         self.title(f'{self.entry.name}')
         self.columns_to_delete = list()  # список выбранных колонок для удаления
         # создание фреймов для удобного размещения элементов
-        lb_frm = tk.Frame(self)
+        lb_frm = ttk.Frame(self)
         self.action_frm = tk.Frame(self)
-        confirm_frm = tk.Frame(self.action_frm)
+        confirm_frm = ttk.Frame(self)
         # создание listbox со всеми колонками в данных. Параметр EXTENDED позволяет через
         # ctrl или shift выделять несколько значений
-        self.columns_lb = tk.Listbox(lb_frm, selectmode=tk.EXTENDED)
+        self.columns_lb = tk.Listbox(lb_frm, selectmode=tk.EXTENDED, height=15)
         for col in self.pd_data.columns:  # заполнение данными
             self.columns_lb.insert(tk.END, col)
         # размещение фреймов
-        lb_frm.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-        self.action_frm.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
+        lb_frm.pack()
+        self.action_frm.pack(fill=tk.BOTH, expand=1)
         confirm_frm.pack(side=tk.BOTTOM)
-        tk.Label(lb_frm, text='Пожалуйста, выберете одну или\nнесколько колонок для удаления').pack()
+        ttk.Label(lb_frm, text='Пожалуйста, выберете одну или\nнесколько колонок для удаления').pack()
         self.columns_lb.pack(fill=tk.BOTH, expand=1)
+
 
         ttk.Button(confirm_frm, text='Отмена', command=self.cancel).pack(side=tk.RIGHT, padx=20, pady=5)
         ttk.Button(confirm_frm, text='Сохранить', command=self.save).pack(side=tk.RIGHT, padx=20, pady=5)
 
-        self.warn_lbl = tk.Label(self.action_frm, text='', pady=20)
-        self.warn_lbl.pack(side=tk.TOP)
-        ttk.Button(self.action_frm, text='Удалить', command=self.del_col, pady=35,
-                  bg='#abcdef', activebackground='#a6caf0').pack(side=tk.TOP, fill=tk.X)
+        self.warn_lbl = ttk.Label(self.action_frm, text='')
+        self.warn_lbl.pack(side=tk.TOP, pady=5)
+        ttk.Button(self.action_frm, text='Удалить', command=self.del_col, width=17).pack(side=tk.TOP, pady=5)
 
     def del_col(self):
         """
@@ -251,16 +250,16 @@ class AddWindow(tk.Tk):
         self.parent = parent
         self.is_edited = False
         # Разделение окна на таблицу и область действий
-        self.table_frm = tk.Frame(self)
+        self.table_frm = ttk.Frame(self)
         self.table_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.buttons_frm = tk.Frame(self, bg='#abcdef')
+        self.buttons_frm = ttk.Frame(self, )
         self.buttons_frm.pack(side=tk.BOTTOM, fill=tk.X)
-        self.action_frm = tk.Frame(self, bg='#abcdef')
+        self.action_frm = ttk.Frame(self, )
         self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
         # Добавление областей для скроллбаров
-        self.tv1_frm = tk.Frame(self.table_frm)
+        self.tv1_frm = ttk.Frame(self.table_frm)
         self.tv1_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.tv2_frm = tk.Frame(self.table_frm, height=10)
+        self.tv2_frm = ttk.Frame(self.table_frm, height=10)
         self.tv2_frm.pack(side=tk.TOP, fill=tk.X)
         # Инициализация таблицы
         self.tv = ttk.Treeview(self.tv1_frm, show='headings')
@@ -272,12 +271,12 @@ class AddWindow(tk.Tk):
         # Отрисовка таблицы
         show_table(self)
         # Добавление 6 фреймов
-        self.add_frm_1 = tk.LabelFrame(self.action_frm, text='Перевод Timestamp', bg='#abcdef')
-        self.add_frm_2 = tk.LabelFrame(self.action_frm, text='Разбиение DateTime', bg='#abcdef')
-        self.add_frm_3 = tk.LabelFrame(self.action_frm, text='Сравнение 2 колонок', bg='#abcdef')
-        self.add_frm_4 = tk.LabelFrame(self.action_frm, text='Вычисляемая колонка из 2', bg='#abcdef')
-        self.add_frm_5 = tk.LabelFrame(self.action_frm, text='Вычисляемая колонка как %', bg='#abcdef')
-        self.add_frm_6 = tk.LabelFrame(self.action_frm, text='Вычисляемая колонка из числа', bg='#abcdef')
+        self.add_frm_1 = ttk.LabelFrame(self.action_frm, text='Перевод Timestamp')
+        self.add_frm_2 = ttk.LabelFrame(self.action_frm, text='Разбиение DateTime', )
+        self.add_frm_3 = ttk.LabelFrame(self.action_frm, text='Сравнение 2 колонок', )
+        self.add_frm_4 = ttk.LabelFrame(self.action_frm, text='Вычисляемая колонка из 2', )
+        self.add_frm_5 = ttk.LabelFrame(self.action_frm, text='Вычисляемая колонка как %', )
+        self.add_frm_6 = ttk.LabelFrame(self.action_frm, text='Вычисляемая колонка из числа', )
         # Расположение фреймов
         self.add_frm_1.pack(side=tk.LEFT, anchor=tk.N, fill=tk.BOTH, expand=1)
         self.add_frm_2.pack(side=tk.LEFT, anchor=tk.N, fill=tk.BOTH, expand=1)
@@ -289,14 +288,14 @@ class AddWindow(tk.Tk):
         ttk.Button(self.buttons_frm, text='Сохранить', command=self.save, width=10).pack(side=tk.RIGHT, padx=10, pady=5)
         # Добавление элементов в фрейм 1
         for frm in [self.add_frm_1, self.add_frm_2, self.add_frm_3, self.add_frm_4, self.add_frm_5, self.add_frm_6]:
-            tk.Label(frm, text='Введите название новой колонки:', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
+            ttk.Label(frm, text='Введите название новой колонки:', ).pack(side=tk.TOP, anchor=tk.W,
                                                                                      padx=5, pady=5)
-        self.ent_1 = tk.Entry(self.add_frm_1, width=30)
-        self.ent_2 = tk.Entry(self.add_frm_2, width=30)
-        self.ent_3 = tk.Entry(self.add_frm_3, width=30)
-        self.ent_4 = tk.Entry(self.add_frm_4, width=30)
-        self.ent_5 = tk.Entry(self.add_frm_5, width=30)
-        self.ent_6 = tk.Entry(self.add_frm_6, width=30)
+        self.ent_1 = ttk.Entry(self.add_frm_1, width=30)
+        self.ent_2 = ttk.Entry(self.add_frm_2, width=30)
+        self.ent_3 = ttk.Entry(self.add_frm_3, width=30)
+        self.ent_4 = ttk.Entry(self.add_frm_4, width=30)
+        self.ent_5 = ttk.Entry(self.add_frm_5, width=30)
+        self.ent_6 = ttk.Entry(self.add_frm_6, width=30)
         # расположение элементов
         self.ent_1.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         self.ent_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
@@ -312,14 +311,14 @@ class AddWindow(tk.Tk):
         ttk.Button(self.add_frm_5, text='Добавить', command=self.comm5).pack(side=tk.BOTTOM, padx=5, pady=5)
         ttk.Button(self.add_frm_6, text='Добавить', command=self.comm6).pack(side=tk.BOTTOM, padx=5, pady=5)
         # При создании новой колонки используется как минимум одна старая
-        tk.Label(self.add_frm_1, text='Выберите колонку с Timestamp', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
+        ttk.Label(self.add_frm_1, text='Выберите колонку с Timestamp', ).pack(side=tk.TOP, anchor=tk.W,
                                                                                          padx=5)
-        tk.Label(self.add_frm_2, text='Выберите колонку с DateTime', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W,
+        ttk.Label(self.add_frm_2, text='Выберите колонку с DateTime', ).pack(side=tk.TOP, anchor=tk.W,
                                                                                         padx=5)
-        tk.Label(self.add_frm_3, text='Выберите первую колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5)
-        tk.Label(self.add_frm_4, text='Выберите первую колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5)
-        tk.Label(self.add_frm_5, text='Выберите колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5, )
-        tk.Label(self.add_frm_6, text='Выберите колонку', bg='#abcdef').pack(side=tk.TOP, anchor=tk.W, padx=5)
+        ttk.Label(self.add_frm_3, text='Выберите первую колонку', ).pack(side=tk.TOP, anchor=tk.W, padx=5)
+        ttk.Label(self.add_frm_4, text='Выберите первую колонку', ).pack(side=tk.TOP, anchor=tk.W, padx=5)
+        ttk.Label(self.add_frm_5, text='Выберите колонку', ).pack(side=tk.TOP, anchor=tk.W, padx=5, )
+        ttk.Label(self.add_frm_6, text='Выберите колонку', ).pack(side=tk.TOP, anchor=tk.W, padx=5)
         # Combobox
         self.cb_1 = ttk.Combobox(self.add_frm_1, values=self.columns)
         self.cb_2 = ttk.Combobox(self.add_frm_2, values=self.columns)
@@ -335,39 +334,39 @@ class AddWindow(tk.Tk):
         self.cb_5.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         self.cb_6.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Работа с Datetime
-        tk.Label(self.add_frm_2, text='Выберите тип новой колонки:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_2, text='Выберите тип новой колонки:').pack(side=tk.TOP,
                                                                                                 anchor=tk.W)
         self.dt_cb = ttk.Combobox(self.add_frm_2, values=['Год', 'Месяц', 'День'])
         self.dt_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Сравнение колонок
-        tk.Label(self.add_frm_3, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_3, text='Выберите вторую колонку:').pack(side=tk.TOP,
                                                                                              anchor=tk.W)
         self.cb_3_2 = ttk.Combobox(self.add_frm_3, values=self.columns)
         self.cb_3_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
-        tk.Label(self.add_frm_3, text='Выберите оператор сравнения:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_3, text='Выберите оператор сравнения:').pack(side=tk.TOP,
                                                                                                  anchor=tk.W)
         self.comp_cb = ttk.Combobox(self.add_frm_3, values=['==', '>', '<', '>=', '<='])
         self.comp_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Вычисление из двух колонок
-        tk.Label(self.add_frm_4, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_4, text='Выберите вторую колонку:').pack(side=tk.TOP,
                                                                                              anchor=tk.W)
         self.cb_4_2 = ttk.Combobox(self.add_frm_4, values=self.columns)
         self.cb_4_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
-        tk.Label(self.add_frm_4, text='Выберите оператор:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_4, text='Выберите оператор:').pack(side=tk.TOP,
                                                                                        anchor=tk.W)
         self.oper_cb = ttk.Combobox(self.add_frm_4, values=['+', '-', '*', '/', '%'])
         self.oper_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Вычисление процента
-        tk.Label(self.add_frm_5, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_5, text='Выберите вторую колонку:').pack(side=tk.TOP,
                                                                                              anchor=tk.W)
         self.cb_5_2 = ttk.Combobox(self.add_frm_5, values=self.columns)
         self.cb_5_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
         # Вычисление колонки из числа
-        tk.Label(self.add_frm_6, text='Выберите вторую колонку:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_6, text='Выберите вторую колонку:').pack(side=tk.TOP,
                                                                                              anchor=tk.W)
-        self.ent_6_2 = tk.Entry(self.add_frm_6)
+        self.ent_6_2 = ttk.Entry(self.add_frm_6)
         self.ent_6_2.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
-        tk.Label(self.add_frm_6, text='Выберите оператор:', bg='#abcdef', padx=5).pack(side=tk.TOP,
+        ttk.Label(self.add_frm_6, text='Выберите оператор:').pack(side=tk.TOP,
                                                                                        anchor=tk.W)
         self.oper2_cb = ttk.Combobox(self.add_frm_6, values=['+', '-', '*', '/', '%'])
         self.oper2_cb.pack(side=tk.TOP, anchor=tk.W, padx=5, pady=5)
@@ -486,20 +485,19 @@ class DataPreparation(tk.Tk):
         self.HEIGHT = height
         self.parent = parent
         # self.geometry(f'{width}x{height}')
-        self.geometry('500x500')
         self.entry = entry
         self.title('Преобразование данных ' + self.entry.name)
         self.is_edited = False
 
         self.pd_data = pd_data
-        self.action_frm = tk.LabelFrame(self, text='Проеобразование данных в тип int', bg='#abcdef')
+        self.action_frm = ttk.LabelFrame(self, text='Проеобразование данных', )
         self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
-        self.lbl_frm = tk.LabelFrame(self, text='Информация о данных')
+        self.lbl_frm = ttk.LabelFrame(self, text='Информация о данных')
         self.lbl_frm.pack(side=tk.RIGHT, fill=tk.BOTH, expand=1)
-        self.lb_frm = tk.LabelFrame(self, text='Выбор колонок для преобразования')
+        self.lb_frm = ttk.LabelFrame(self, text='Выбор колонок для преобразования')
         self.lb_frm.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
-        self.info_lbl = tk.Label(self.lbl_frm, text='', justify=tk.LEFT)
+        self.info_lbl = ttk.Label(self.lbl_frm, text='', justify=tk.LEFT)
         self.info_lbl.pack(side=tk.LEFT)
         self.columns_lb = tk.Listbox(self.lb_frm, selectmode=tk.EXTENDED)
         self.n_unique = {}
@@ -563,21 +561,19 @@ class DataProcessing(tk.Tk):
         self.pd_data = pd_data
         self.null_cols = null_columns
         self.title(f'Обработка пропущенных значений в {self.entry.name}')
-        self.main_frm = tk.LabelFrame(self)
+        self.main_frm = ttk.LabelFrame(self)
         self.main_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-        self.btn_frm = tk.Frame(self)
+        self.btn_frm = ttk.Frame(self)
         self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X)
-        self.info_frm = tk.LabelFrame(self.main_frm, text='Информация', height=200)
+        self.info_frm = ttk.LabelFrame(self.main_frm, text='Информация', height=200)
         self.info_frm.pack(side=tk.TOP)
         self.is_edited = False
 
-        self.geometry('500x500')
-
-        self.info_lbl = tk.Label(self.info_frm, text=self.get_info(), justify=tk.LEFT)
+        self.info_lbl = ttk.Label(self.info_frm, text=self.get_info(), justify=tk.LEFT)
         self.info_lbl.pack(side=tk.TOP, pady=5)
         self.col_cb = ttk.Combobox(self.main_frm, values=self.null_cols)
         self.col_cb.pack(side=tk.TOP, pady=5)
-        self.command_frm = tk.LabelFrame(self.main_frm, text='Выберите действие')
+        self.command_frm = ttk.LabelFrame(self.main_frm, text='Выберите действие')
         self.command_frm.pack(side=tk.TOP)
 
         ttk.Button(self.command_frm, text='Удаление', command=self.delete, width=15).pack(side=tk.LEFT, padx=5, pady=5)

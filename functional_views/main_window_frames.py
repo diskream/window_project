@@ -13,40 +13,42 @@ from functional_views.visualization import VisualisationView
 from tools.functions import serialize, get_db
 
 
-class TopFrame(tk.Frame):
+class TopFrame(ttk.Frame):
     def __init__(self, master, *args, **kwargs):
-        tk.Frame.__init__(self, master, *args, **kwargs)
+        ttk.Frame.__init__(self, master)
         self.master = master
-        tk.Label(self, text='Выберите данные из вложенного списка:').pack(side=tk.TOP, ipady=10)
+        ttk.Label(self, text='Выберите данные из вложенного списка:').pack(side=tk.TOP, ipady=10)
         # Creating hierarchical treeview
         self.tv_hierarchy = ttk.Treeview(self, height=13, show='tree')
         self.tv_hierarchy.pack(side=tk.TOP)
         self.db = get_db()
         self.insert_tv(self.db)
-
+        w = {
+            'width': 17
+        }
         ttk.Button(self, text='Обновить таблицу', command=self.update_table).pack(side=tk.TOP, pady=10)
-        self.btn_lb_frm = tk.LabelFrame(self, text='Выбор действия')
-        self.btn_lb_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
-        self.btn_frm = tk.Frame(self.btn_lb_frm)
+        self.btn_lb_frm = ttk.LabelFrame(self, text='Выбор действия')
+        self.btn_lb_frm.pack(side=tk.BOTTOM, fill=tk.X, pady=5, padx=5)
+        self.btn_frm = ttk.Frame(self.btn_lb_frm)
         self.btn_frm.pack()
         # Buttons for the new windows
         btn_pad = {
             'padx': 10,
             'pady': 5
         }
-        ttk.Button(self.btn_frm, text='Классификация', command=self.open_ml, width=18).grid(row=1, column=0, **btn_pad)
-        ttk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, width=18).grid(row=0, column=0, **btn_pad)
-        ttk.Button(self.btn_frm, text='Редактирование', command=self.open_data, width=18).grid(row=0, column=1,
+        ttk.Button(self.btn_frm, text='Классификация', command=self.open_ml, **w).grid(row=1, column=0, **btn_pad)
+        ttk.Button(self.btn_frm, text='Обзор данных', command=self.open_table, **w).grid(row=0, column=0, **btn_pad)
+        ttk.Button(self.btn_frm, text='Редактирование', command=self.open_data, **w).grid(row=0, column=1,
                                                                                               **btn_pad)
-        ttk.Button(self.btn_frm, text='Визуализация', command=self.open_visual, width=18).grid(row=0, column=2,
+        ttk.Button(self.btn_frm, text='Визуализация', command=self.open_visual, **w).grid(row=0, column=2,
                                                                                               **btn_pad)
-        ttk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster, width=18).grid(row=1, column=1,
+        ttk.Button(self.btn_frm, text='Кластеризация', command=self.open_cluster, **w).grid(row=1, column=1,
                                                                                                 **btn_pad)
-        ttk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural, width=18).grid(row=1, column=2,
+        ttk.Button(self.btn_frm, text='Нейронные сети', command=self.open_neural, **w).grid(row=1, column=2,
                                                                                                 **btn_pad)
 
         self.warn_var = tk.StringVar()
-        self.warn_lbl = tk.Label(self, textvariable=self.warn_var)
+        self.warn_lbl = ttk.Label(self, textvariable=self.warn_var)
         self.warn_lbl.pack(side=tk.BOTTOM)
 
     def insert_tv(self, db):
@@ -136,7 +138,8 @@ class TopFrame(tk.Frame):
 
     def update_table(self):
         self.tv_hierarchy.delete(*self.tv_hierarchy.get_children())
-        self.insert_tv(get_db())
+        self.db = get_db()
+        self.insert_tv(self.db)
 
     @staticmethod
     def get_tables_list():
@@ -151,32 +154,32 @@ class TopFrame(tk.Frame):
             conn.close()
 
 
-class BottomFrame(tk.LabelFrame):
+class BottomFrame(ttk.LabelFrame):
     def __init__(self, parent, *args, **kwargs):
-        tk.LabelFrame.__init__(self, parent, *args, **kwargs)
+        ttk.LabelFrame.__init__(self, parent)
         self.parent = parent
         self.file_path = ''
-        self.configure(bg='#abcdef', text='Загрузка данных')
+        self.configure(text='Загрузка данных')
 
-        self.btn_frm = tk.Frame(self, bg='#abcdef')
+        self.btn_frm = ttk.Frame(self)
         self.btn_frm.pack(side=tk.BOTTOM, fill=tk.X)
 
-        self.file_path_lbl = tk.Label(self, text='Путь к файлу: \n' + self.file_path, bg='#abcdef')
+        self.file_path_lbl = ttk.Label(self, text='Путь к файлу: \n' + self.file_path)
         self.file_path_lbl.pack(anchor=tk.N)
 
         self.file_open_button = ttk.Button(self.btn_frm, text='Загрузить файл', command=self.open_file, width=20)
         self.file_open_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        self.db_create_button = ttk.Button(self.btn_frm, text='Добавить в таблицу Tasks', command=self.input_table,
+        self.db_create_button = ttk.Button(self.btn_frm, text='Добавить в БД', command=self.input_table,
                                           width=20)
         self.db_create_button.pack(side=tk.RIGHT, padx=10, pady=10)
 
         self.db_create_info = tk.StringVar()
         self.db_create_info.set('Введите название данных:')
-        tk.Label(self, textvariable=self.db_create_info, bg='#abcdef').pack(anchor=tk.S)
+        ttk.Label(self, textvariable=self.db_create_info).pack(anchor=tk.S)
 
         self.table_name = tk.StringVar()
-        self.table_name_entry = tk.Entry(self, textvariable=self.table_name, width=40)
+        self.table_name_entry = ttk.Entry(self, textvariable=self.table_name, width=40)
         self.table_name_entry.pack(anchor=tk.S)
 
         # self.table_box = ttk.Combobox(self, values=self.get_table_list())

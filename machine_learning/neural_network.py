@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from io import StringIO
 from sqlite3 import connect
-from tools.functions import deserialize, update_entry, save_model
+from tools.functions import deserialize, update_entry, save_model, get_models_list
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, LSTM
@@ -305,9 +305,9 @@ class ClassificationFrame(tk.Frame):
         model.fit(x_train, y_train, verbose=0, **self.get_fit())
         score = model.evaluate(x=x_test, y=y_test)
         print(type(model))
-        self.master.model = model
+        self.master.model_entry = model
         self.master.score = score
-        self.master.get_summary(self.master.model, score)
+        self.master.get_summary(self.master.model_entry, score)
 
     def get_compile(self):
         params = {}
@@ -486,18 +486,7 @@ class ForecastingFrame(ClassificationFrame):
         model.fit(x_train, y_train, verbose=0, **self.get_fit())
         score = model.evaluate(x=x_test, y=y_test)
         print(type(model))
-        self.master.model = model
+        self.master.model_entry = model
         self.master.score = score
-        self.master.get_summary(self.master.model, score)
+        self.master.get_summary(self.master.model_entry, score)
 
-
-def get_models_list() -> list:
-    conn = connect('main.sqlite3')
-    cur = conn.cursor()
-    try:
-        models = []
-        for model in cur.execute('SELECT name FROM Models').fetchall():
-            models.append(model[0])
-        return models
-    finally:
-        conn.close()

@@ -7,7 +7,7 @@ from tensorflow.keras.utils import serialize_keras_object, deserialize_keras_obj
 
 
 # Примечание: в функциях есть повторяющиейся строки с созданием соединения и курсора.
-# Сделать либо декоратор, либо функцию, которая будет возвращать соединение.
+# Сделать либо деякоратор, либо функцию, которая будет возвращать соединение.
 
 def treeview_sort_column(tv, col, reverse):
     """
@@ -257,4 +257,15 @@ def save_model(entry, clf, accuracy=None, name:str=None, path=False):
         cur.execute(_sql, tuple(data.values()))
     finally:
         conn.commit()
+        conn.close()
+
+def get_models_list() -> list:
+    conn = sqlite3.connect('main.sqlite3')
+    cur = conn.cursor()
+    try:
+        models = []
+        for model in cur.execute('SELECT name FROM Models').fetchall():
+            models.append(model[0])
+        return models
+    finally:
         conn.close()
