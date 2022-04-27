@@ -5,18 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="65c3d264-137d-4909-a75b-9442a773911e" name="Changes" comment="workspace">
-      <change afterPath="$PROJECT_DIR$/other/temp/tree.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/functional_views/data_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/functional_views/data_views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/functional_views/main_window_frames.py" beforeDir="false" afterPath="$PROJECT_DIR$/functional_views/main_window_frames.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/machine_learning/classification.py" beforeDir="false" afterPath="$PROJECT_DIR$/machine_learning/classification.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/machine_learning/clustering.py" beforeDir="false" afterPath="$PROJECT_DIR$/machine_learning/clustering.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/machine_learning/neural_network.py" beforeDir="false" afterPath="$PROJECT_DIR$/machine_learning/neural_network.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/main.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/functions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/models.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +37,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="ORM" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -206,8 +195,8 @@
       <list>
         <item itemvalue="Python.main" />
         <item itemvalue="Python.test" />
-        <item itemvalue="Python.classification" />
         <item itemvalue="Python.temp" />
+        <item itemvalue="Python.classification" />
         <item itemvalue="Python.asd" />
       </list>
     </recent_temporary>
@@ -272,7 +261,10 @@
       <workItem from="1648565597675" duration="7378000" />
       <workItem from="1648729267324" duration="1008000" />
       <workItem from="1649923021874" duration="17981000" />
-      <workItem from="1650030977822" duration="1721000" />
+      <workItem from="1650030977822" duration="2010000" />
+      <workItem from="1650264502359" duration="6389000" />
+      <workItem from="1650359788204" duration="8630000" />
+      <workItem from="1651057778314" duration="4659000" />
     </task>
     <task id="LOCAL-00001" summary="new update">
       <created>1639389067341</created>
@@ -498,7 +490,14 @@
       <option name="project" value="LOCAL" />
       <updated>1649943891840</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Убрал геометрию в некоторых окнах, должно поправить масштабируемость">
+      <created>1650032982127</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1650032982127</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -544,7 +543,6 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Создал классы для таблиц и переделал запись в таблицу через классы" />
     <MESSAGE value="все сломал (опять)" />
     <MESSAGE value="Починил окно редактирования и сделал удаление колонок" />
     <MESSAGE value="Сделал возможность редактирования данных из таблицы Tasks" />
@@ -569,7 +567,8 @@
     <MESSAGE value="обновление" />
     <MESSAGE value="Обновление интерфейса + дерево решений" />
     <MESSAGE value="Обновление интерфейса, фикс бага с обновлением таблицы, управление моделью классификации" />
-    <option name="LAST_COMMIT_MESSAGE" value="Обновление интерфейса, фикс бага с обновлением таблицы, управление моделью классификации" />
+    <MESSAGE value="Убрал геометрию в некоторых окнах, должно поправить масштабируемость" />
+    <option name="LAST_COMMIT_MESSAGE" value="Убрал геометрию в некоторых окнах, должно поправить масштабируемость" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
