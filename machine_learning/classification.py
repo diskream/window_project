@@ -5,7 +5,7 @@ from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import classification_report, roc_curve, auc
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 from tools.functions import deserialize, update_entry, save_model, get_models_list
 from tools.models import Model
 import pandas as pd
@@ -29,6 +29,8 @@ class ClassificationView(tk.Tk):
         self.geometry(f'{int(self.w * p)}x{int(self.h * p)}')
         self.entry = entry
         update_entry(self.entry)
+        if isinstance(self.entry.name, tuple):
+            self.entry.name = self.entry.name[0]
         self.pd_data = deserialize(self.entry.table_file)
         # Разделение окна на фреймы
         pad = {
@@ -44,7 +46,8 @@ class ClassificationView(tk.Tk):
         self.upper_frm.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
         self.alg_cb = ttk.Combobox(self.upper_frm, values=['Дерево решений',
                                                            'Случайный лес',
-                                                           'k Ближайших соседей'],
+                                                           'k Ближайших соседей',
+                                                           'Метод опорных векторов'],
                                    )
         self.lower_frm = tk.Frame(self.left_frm)
         self.lower_frm.pack(side=tk.BOTTOM)
@@ -101,10 +104,11 @@ class WorkWithModel(ttk.LabelFrame):
         # Создания фреймов действий над моделью
         model_overview = ttk.LabelFrame(self, text='Обзор модели')
         model_overview.pack(fill=tk.BOTH, expand=1, **pad)
-        model_management = ttk.LabelFrame(self, text='Управление моделью')
-        model_management.pack(fill=tk.BOTH, expand=1, **pad)
         model_query = ttk.LabelFrame(self, text='Запрос к модели')
         model_query.pack(fill=tk.X, **pad)
+        model_management = ttk.LabelFrame(self, text='Управление моделью')
+        model_management.pack(fill=tk.BOTH, expand=1, **pad)
+
         # Обзор модели
         self.model_overview = ttk.Label(model_overview, text=self.get_model_overview(), justify=tk.LEFT)
         self.model_overview.pack(side=tk.LEFT, anchor=tk.N, **pad)
@@ -127,10 +131,11 @@ class WorkWithModel(ttk.LabelFrame):
         ttk.Button(model_management, text='Подтвердить', command=self.update_name).grid(row=1, column=1, **pad)
         ttk.Label(model_management, text='Удаление модели:').grid(row=2, column=0, columnspan=2, **pad)
         ttk.Button(model_management, text='Удалить модель', command=self.delete_model).grid(row=3, column=0,
-                                                                                            columnspan=2,**pad)
+                                                                                            columnspan=2, **pad)
         ttk.Label(model_management, text='Изменение описания модели:').grid(row=0, column=2, columnspan=2, **pad)
         self.description_text = tk.Text(model_management, width=30, height=5)
         self.description_text.grid(row=1, column=2, columnspan=2, rowspan=6, **pad)
+        ttk.Button(model_management, text='Подтвердить', command=self.update_desc).grid(row=8, column=2, columnspan=2, **pad)
 
     def get_data_list(self):
         table = self.table_selection_cb.get()
@@ -171,7 +176,6 @@ class WorkWithModel(ttk.LabelFrame):
             ysb.pack(side=tk.RIGHT, fill=tk.Y)
             xsb.pack(side=tk.BOTTOM, fill=tk.X)
             tv.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
-
         else:
             messagebox.showwarning("Столбцы данных и переменные модели не совпадают!")
 
@@ -186,9 +190,9 @@ class WorkWithModel(ttk.LabelFrame):
             try:
                 with connect('main.sqlite3') as conn:
                     query = "SELECT name FROM Task_variant WHERE task_id = ? AND variant_id = ?"
-                    print(self.model_entry.task_id, self.model_entry.variant_id)
                     return \
-                    conn.cursor().execute(query, (self.model_entry.task_id, self.model_entry.variant_id)).fetchone()[0]
+                        conn.cursor().execute(query,
+                                              (self.model_entry.task_id, self.model_entry.variant_id)).fetchone()[0]
             except TypeError as _ex:
                 self.model_overview.configure(text='При загрузке модели возникла ошибка.')
                 print(_ex)
@@ -223,10 +227,13 @@ class WorkWithModel(ttk.LabelFrame):
     def delete_model(self):
         pass
 
+    def update_desc(self):
+        pass
 
 class DecisionTreeFrame(tk.Frame):
     def __init__(self, parent, entry, pd_data):
         tk.Frame.__init__(self, parent)
+        self.master = parent
         self.entry = entry
         self.pd_data = pd_data
         self.clf_conf_lb_frm = ttk.Labelframe(self, text='Конфигурация дерева решений')
@@ -266,31 +273,31 @@ class DecisionTreeFrame(tk.Frame):
             'width': 15,
             'justify': tk.CENTER
         }
-        tk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
         self.criterion_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
         self.criterion_ent.grid(row=1, column=0, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
+        ttk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
         self.max_depth_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
         self.max_depth_ent.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
+        ttk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
         self.min_samples_split_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
                                                **ent_options)
         self.min_samples_split_ent.grid(row=1, column=2, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
         self.min_samples_leaf_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
                                               **ent_options)
         self.min_samples_leaf_ent.grid(row=3, column=0, padx=5, pady=10)
 
-        tk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
+        ttk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
         self.min_weight_fraction_leaf_ent = ttk.Entry(self.clf_conf_frm,
                                                       textvariable=self.default_params['min_weight_fraction_leaf'],
                                                       **ent_options)
         self.min_weight_fraction_leaf_ent.grid(row=3, column=1, padx=5, pady=10)
 
-        tk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
+        ttk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
         self.random_state_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
                                           **ent_options)
         self.random_state_ent.grid(row=3, column=2, padx=5, pady=10)
@@ -299,16 +306,17 @@ class DecisionTreeFrame(tk.Frame):
             'padx': 5,
             'pady': 3,
         }
-        tk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
+        ttk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
         self.col_cb = ttk.Combobox(self.model_frm_l, values=list(self.pd_data.columns))
         self.col_cb.pack(**model_pack)
-        tk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
-        self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
-        self.split_sb.pack(**model_pack)
         self.check_var = tk.BooleanVar(self)
         self.check_split = ttk.Checkbutton(self.model_frm_l, text='Разделить выборку\nна тренировочную и тестовую',
                                            variable=self.check_var, onvalue=True, offvalue=False)
         self.check_split.pack(**model_pack)
+        ttk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
+        self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
+        self.split_sb.pack(**model_pack)
+
         btn_pack = {
             'side': tk.LEFT,
             'padx': 10,
@@ -323,15 +331,15 @@ class DecisionTreeFrame(tk.Frame):
         self.check_cv = ttk.Checkbutton(self.model_frm_r, text='Кросс-валидация', variable=self.cv_var, onvalue=True,
                                         offvalue=False)
 
-        self.accuracy = '...'
-        self.cv_accuracy = '...'
+        self.accuracy = '...'  # Средняя точность
+        self.cv_accuracy = '...'  # Точность при кросс-валидации
         self.check_cv.pack(**model_pack)
-        tk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
+        ttk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
         self.cv_sb = ttk.Spinbox(self.model_frm_r, from_=3, to=7, width=20)
         self.cv_sb.pack(**model_pack)
-        self.acc_lbl = tk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
-                                                       f'Средняя точность при кросс-валидации:'
-                                                       f'\n{str(self.cv_accuracy)}')
+        self.acc_lbl = ttk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
+                                                        f'Средняя точность при кросс-валидации:'
+                                                        f'\n{str(self.cv_accuracy)}')
         self.acc_lbl.pack(**model_pack)
 
         self.isSplitted = False
@@ -426,7 +434,22 @@ class DecisionTreeFrame(tk.Frame):
         plt.show()
 
     def save(self):
-        save_model(self.entry, self.clf, self.accuracy)
+        pad = {
+            'padx': 5,
+            'pady': 5
+        }
+        window = tk.Toplevel(self.master)
+        ttk.Label(window, text='Название модели:').grid(row=0, column=0,  **pad)
+        name_ent = ttk.Entry(window)
+        name_ent.grid(row=0, column=1, sticky=tk.W, **pad)
+        ttk.Label(window, text='Описание модели:').grid(row=1, column=0, **pad)
+        desc_text = tk.Text(window, width=30, height=5)
+        desc_text.grid(row=1, column=1, **pad)
+        ttk.Button(window, text='Сохранить',
+                   command=lambda: [save_model(self.entry, self.clf, self.accuracy,
+                                                                        name=name_ent.get(),
+                                                                        desc=desc_text.get("1.0", "end-1c")),
+                                    window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
 
 
 class RandomForestFrame(DecisionTreeFrame):
@@ -471,35 +494,35 @@ class RandomForestFrame(DecisionTreeFrame):
             'width': 15,
             'justify': tk.CENTER
         }
-        tk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='criterion').grid(row=0, column=0, padx=5)
         self.criterion_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['criterion'], **ent_options)
         self.criterion_ent.grid(row=1, column=0, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
+        ttk.Label(self.clf_conf_frm, text='max_depth').grid(row=0, column=1, padx=5)
         self.max_depth_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['max_depth'], **ent_options)
         self.max_depth_ent.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
+        ttk.Label(self.clf_conf_frm, text='min_samples_split').grid(row=0, column=2, padx=5)
         self.min_samples_split_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_split'],
                                                **ent_options)
         self.min_samples_split_ent.grid(row=1, column=2, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='min_samples_leaf').grid(row=2, column=0, padx=5)
         self.min_samples_leaf_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples_leaf'],
                                               **ent_options)
         self.min_samples_leaf_ent.grid(row=3, column=0, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
+        ttk.Label(self.clf_conf_frm, text='min_weight_fraction_leaf').grid(row=2, column=1, padx=5)
         self.min_weight_fraction_leaf_ent = ttk.Entry(self.clf_conf_frm,
                                                       textvariable=self.default_params['min_weight_fraction_leaf'],
                                                       **ent_options)
         self.min_weight_fraction_leaf_ent.grid(row=3, column=1, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
+        ttk.Label(self.clf_conf_frm, text='random_state').grid(row=2, column=2, padx=5)
         self.random_state_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['random_state'],
                                           **ent_options)
         self.random_state_ent.grid(row=3, column=2, padx=5, pady=5)
-        tk.Label(self.clf_conf_frm, text='n_estimators').grid(row=4, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='n_estimators').grid(row=4, column=0, padx=5)
         self.n_estimators_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_estimators'],
                                           **ent_options)
         self.n_estimators_ent.grid(row=5, column=0, padx=5, pady=5)
@@ -510,10 +533,10 @@ class RandomForestFrame(DecisionTreeFrame):
             'padx': 5,
             'pady': 3,
         }
-        tk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
+        ttk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
         self.col_cb = ttk.Combobox(self.model_frm_l, values=list(self.pd_data.columns))
         self.col_cb.pack(**model_pack)
-        tk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
+        ttk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
         self.check_var = tk.BooleanVar(self)
@@ -534,12 +557,12 @@ class RandomForestFrame(DecisionTreeFrame):
         self.accuracy = '...'
         self.cv_accuracy = '...'
         self.check_cv.pack(**model_pack)
-        tk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
+        ttk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
         self.cv_sb = ttk.Spinbox(self.model_frm_r, from_=3, to=7, width=20)
         self.cv_sb.pack(**model_pack)
-        self.acc_lbl = tk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
-                                                       f'Средняя точность при кросс-валидации:'
-                                                       f'\n{str(self.cv_accuracy)}')
+        self.acc_lbl = ttk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
+                                                        f'Средняя точность при кросс-валидации:'
+                                                        f'\n{str(self.cv_accuracy)}')
         self.acc_lbl.pack(**model_pack)
 
         self.isSplitted = False
@@ -587,24 +610,24 @@ class KNeighborsFrame(DecisionTreeFrame):
             'width': 15,
             'justify': tk.CENTER
         }
-        tk.Label(self.clf_conf_frm, text='n_neighbors').grid(row=0, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='n_neighbors').grid(row=0, column=0, padx=5)
         self.n_neighbors_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_neighbors'],
                                          **ent_options)
         self.n_neighbors_ent.grid(row=1, column=0, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='weights').grid(row=0, column=1, padx=5)
+        ttk.Label(self.clf_conf_frm, text='weights').grid(row=0, column=1, padx=5)
         self.weights_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['weights'], **ent_options)
         self.weights_ent.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='algorithm').grid(row=0, column=2, padx=5)
+        ttk.Label(self.clf_conf_frm, text='algorithm').grid(row=0, column=2, padx=5)
         self.algorithm_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['algorithm'], **ent_options)
         self.algorithm_ent.grid(row=1, column=2, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='leaf_size').grid(row=2, column=0, padx=5)
+        ttk.Label(self.clf_conf_frm, text='leaf_size').grid(row=2, column=0, padx=5)
         self.leaf_size_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['leaf_size'], **ent_options)
         self.leaf_size_ent.grid(row=3, column=0, padx=5, pady=5)
 
-        tk.Label(self.clf_conf_frm, text='p').grid(row=2, column=1, padx=5)
+        ttk.Label(self.clf_conf_frm, text='p').grid(row=2, column=1, padx=5)
         self.p_ent = ttk.Entry(self.clf_conf_frm, textvariable=self.default_params['p'], **ent_options)
         self.p_ent.grid(row=3, column=1, padx=5, pady=5)
         # Доп параметры, которых нет в родительском классе DecisionTreeFrame
@@ -615,10 +638,10 @@ class KNeighborsFrame(DecisionTreeFrame):
             'padx': 5,
             'pady': 3,
         }
-        tk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
+        ttk.Label(self.model_frm_l, text='Выберите целевую переменную:').pack(**model_pack)
         self.col_cb = ttk.Combobox(self.model_frm_l, values=list(self.pd_data.columns))
         self.col_cb.pack(**model_pack)
-        tk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
+        ttk.Label(self.model_frm_l, text='Выберите процент тестовой выборки').pack(**model_pack)
         self.split_sb = ttk.Spinbox(self.model_frm_l, from_=25, to=40, width=20)
         self.split_sb.pack(**model_pack)
         self.check_var = tk.BooleanVar(self)
@@ -639,12 +662,12 @@ class KNeighborsFrame(DecisionTreeFrame):
         self.accuracy = '...'
         self.cv_accuracy = '...'
         self.check_cv.pack(**model_pack)
-        tk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
+        ttk.Label(self.model_frm_r, text='Количество разделений кросс-валидации').pack(**model_pack)
         self.cv_sb = ttk.Spinbox(self.model_frm_r, from_=3, to=7, width=20)
         self.cv_sb.pack(**model_pack)
-        self.acc_lbl = tk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
-                                                       f'Средняя точность при кросс-валидации:'
-                                                       f'\n{str(self.cv_accuracy)}')
+        self.acc_lbl = ttk.Label(self.model_frm_r, text=f'Точность модели:\n{str(self.accuracy)}\n'
+                                                        f'Средняя точность при кросс-валидации:'
+                                                        f'\n{str(self.cv_accuracy)}')
         self.acc_lbl.pack(**model_pack)
 
         self.isSplitted = False
@@ -659,6 +682,7 @@ class DecisionTreeModelInfo(tk.Tk):
         self.x = x
         self.y = y
         self.plot_size = (8, 6)
+        self.title('Визуализация результатов классификации')
         self.is_splitted = is_splitted
         bg_opt = {
             'bg': 'white'
@@ -672,9 +696,10 @@ class DecisionTreeModelInfo(tk.Tk):
             self.y_test = y_test
         self.plot_feature_importance(self.plot_size)
         self.plot_roc(self.plot_size)
+        self.plot_cm(self.plot_size)
         prediction = self.clf.predict(self.x_test) if self.is_splitted else self.clf.predict(self.x)
         # report = classification_report(self.y_test if self.is_splitted else self.y, prediction)
-        # tk.Label(self.bottom_frm, text=report, justify=tk.LEFT, **bg_opt).pack()
+        # ttk.Label(self.bottom_frm, text=report, justify=tk.LEFT, **bg_opt).pack()
 
     def plot_feature_importance(self, plot_size: tuple) -> None:
         feature_importance = self.clf.feature_importances_
@@ -686,7 +711,8 @@ class DecisionTreeModelInfo(tk.Tk):
         fi_df.sort_values(by=['feature_importance'], ascending=False, inplace=True)
         figure = Figure(figsize=plot_size, dpi=100)
         ax = figure.add_subplot(1, 1, 1)
-        sns.barplot(y=fi_df['feature_names'], x=fi_df['feature_importance'], ax=ax)
+        sns.barplot(y=fi_df['feature_names'], x=fi_df['feature_importance'], ax=ax).\
+            set_title('Важность ключевых параметров')
         f_i_graph = FigureCanvasTkAgg(figure, self.top_frm)
         f_i_graph.get_tk_widget().pack(side=tk.LEFT)
 
@@ -698,8 +724,21 @@ class DecisionTreeModelInfo(tk.Tk):
         plot = figure.add_subplot(1, 1, 1)
         plot.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
         plot.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plot.set_title('ROC-кривая')
+        plot.set_xlabel('False Positive Rate (FPR)')
+        plot.set_ylabel('True Positive Rate (TPR)')
         roc_graph = FigureCanvasTkAgg(figure, self.top_frm)
         roc_graph.get_tk_widget().pack(side=tk.LEFT)
+
+    def plot_cm(self, plot_size):
+        y_predicted = self.clf.predict(self.x_test if self.is_splitted else self.x)
+        figure = Figure(figsize=plot_size, dpi=100)
+        ax = figure.add_subplot(1, 1, 1)
+        cm = confusion_matrix(self.y_test if self.is_splitted else self.y, y_predicted)
+        sns.heatmap(cm, ax=ax, annot=True).set_title('Матрица ошибок')
+        cm = FigureCanvasTkAgg(figure, self.bottom_frm)
+        cm.get_tk_widget().pack()
+
 
 
 class DecisionTreePlot(tk.Tk):
@@ -711,4 +750,4 @@ class DecisionTreePlot(tk.Tk):
                   class_names=cn.astype(str),
                   filled=True)
         fig.savefig('temp/tree_test.png')
-        tk.Label(self, text='Window is currently unavailable')
+        ttk.Label(self, text='Window is currently unavailable')
