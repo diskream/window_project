@@ -489,7 +489,7 @@ class DataPreparation(tk.Tk):
         self.title('Преобразование данных ' + self.entry.name)
         self.is_edited = False
 
-        self.pd_data = pd_data
+        self.pd_data: pd.DataFrame = pd_data
         self.action_frm = ttk.LabelFrame(self, text='Проеобразование данных', )
         self.action_frm.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
         self.lbl_frm = ttk.LabelFrame(self, text='Информация о данных')
@@ -510,7 +510,22 @@ class DataPreparation(tk.Tk):
                                                                                        padx=10, pady=10)
         ttk.Button(self.action_frm, text='Преобразовать', command=self.convert_data).pack(side=tk.TOP, anchor=tk.W,
                                                                                          padx=10, pady=10)
+        ttk.Button(self.action_frm, text='Категория', command=self.category).pack(side=tk.TOP, anchor=tk.W,
+                                                                                         padx=10, pady=10)
         self.get_info()
+
+    def category(self):
+        cols = []  # названия колонок для преобразования
+        columns = self.columns_lb.curselection()  # индексы колонок для преобразования
+        for column in columns:
+            cols.append(self.columns_lb.get(column))
+        processing = {col: "category" for col in cols}
+        print(processing)
+        self.pd_data = self.pd_data.astype(processing)
+        self.columns_lb.delete(0, tk.END)
+        self.get_lb()
+        self.get_info()
+        self.is_edited = True
 
     def convert_data(self):
         cols = []  # названия колонок для преобразования
@@ -648,8 +663,10 @@ def obj_to_int(df, length=100, cols=None):
         columns = cols
     obj_dict = dict()
     for col in columns:
-        if df[col].dtype == 'O':
+        print(df[col].dtype)
+        if df[col].dtype == 'O' or df[col].dtype == "category":
             obj_dict[col] = df[col].unique().tolist()
+
     # получаем словарь типа object:int64
     # length - максимальное число изменений (изменять каждый раз для конктретного случая)
     for key, value in obj_dict.items():
