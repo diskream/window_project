@@ -46,6 +46,7 @@ class ClusteringView(tk.Tk):
         self.alg_cb = ttk.Combobox(self.upper_frm, values=['K-means',
                                                            'DBSCAN',
                                                            'C-means',
+                                                           # 'C-means(soft)',
                                                            'Иерархическая'],
                                    )
         self.lower_frm = tk.Frame(self.left_frm)
@@ -57,18 +58,16 @@ class ClusteringView(tk.Tk):
         self.update_title()
         # Фреймы алгоритмов
         self.kmeans_frm = KMeansFrame(self.left_frm, self.entry, self.pd_data, self.pd_data2, self.pd_data3)
-        self.dbscan_frm = DBSCANFrame(self.left_frm, self.entry, self.pd_data)
-        self. cmeans_frm = CMeansFrame(self.left_frm, self.entry, self.pd_data)
-        self.aggl_frm = AgglFrame(self.left_frm, self.entry, self.pd_data)
-        #
-        # self.dt_frm = DecisionTreeFrame(self.left_frm, self.entry, self.pd_data)
-        # self.rf_frm = RandomForestFrame(self.left_frm, self.entry, self.pd_data)
-        # self.knn_frm = KNeighborsFrame(self.left_frm, self.entry, self.pd_data)
+        self.dbscan_frm = DBSCANFrame(self.left_frm, self.entry, self.pd_data, self.pd_data2, self.pd_data3)
+        self. cmeans_frm = CMeansFrame(self.left_frm, self.entry, self.pd_data, self.pd_data2, self.pd_data3)
+        self.cmeansSoft_frm = CMeansSoftFrame(self.left_frm, self.entry, self.pd_data, self.pd_data2, self.pd_data3)
+        self.aggl_frm = AgglFrame(self.left_frm, self.entry, self.pd_data, self.pd_data2, self.pd_data3)
         self.algorithms = {
             'K-means': self.kmeans_frm,
             'DBSCAN': self.dbscan_frm,
             'C-means': self.cmeans_frm,
-            'Иерархическая' : self.aggl_frm
+            'C-means(soft)': self.cmeansSoft_frm,
+            'Иерархическая': self.aggl_frm
         }
         self.current_alg = None
         self.get_alg()
@@ -235,6 +234,50 @@ class WorkWithModel(ttk.LabelFrame):
     def update_desc(self):
         pass
 
+
+# Всплывающее окно
+
+class ToolTip(object):
+    def __init__(self, widget):
+        self.widget = widget
+        self.tipwindow = None
+        self.id = None
+        self.x = self.y = 0
+
+    def showtip(self, text):
+        "Display text in tooltip window"
+        self.text = text
+        if self.tipwindow or not self.text:
+            return
+        x, y, cx, cy = self.widget.bbox("insert")
+        x = x + self.widget.winfo_rootx() + 47
+        # 57
+        y = y + cy + self.widget.winfo_rooty() +20
+        # 27
+        self.tipwindow = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(1)
+        tw.wm_geometry("+%d+%d" % (x, y))
+        label = tk.Label(tw, text=self.text, justify=tk.LEFT,
+                      background="#ffffe0", relief=tk.SOLID, borderwidth=1,
+                      font=("tahoma", "8", "normal"))
+        label.pack(ipadx=1)
+
+    def hidetip(self):
+        tw = self.tipwindow
+        self.tipwindow = None
+        if tw:
+            tw.destroy()
+
+def CreateToolTip(widget, text):
+    toolTip = ToolTip(widget)
+    def enter(event):
+        toolTip.showtip(text)
+    def leave(event):
+        toolTip.hidetip()
+    widget.bind('<Enter>', enter)
+    widget.bind('<Leave>', leave)
+
+
 class KMeansFrame(tk.Frame):
     def __init__(self, parent, entry, pd_data, pd_data2, pd_data3):
         tk.Frame.__init__(self, parent)
@@ -273,7 +316,6 @@ class KMeansFrame(tk.Frame):
         self.default_params = {
             'n_clusters': tk.IntVar(self.clf_conf_frm, value=8),
             'n_init': tk.StringVar(self.clf_conf_frm, value=10)
-            # 'random_state': tk.StringVar(self.conf_frm, value='None')
         }
         self.params = {}
 
@@ -292,16 +334,23 @@ class KMeansFrame(tk.Frame):
         self.n_clusters_sb.grid(row=3, column=0, columnspan=1, **pad)
         # self.n_clusters_sb.grid_columnconfigure()
         # , padx=5, pady=5)
+        CreateToolTip(self.n_clusters_sb, text='Кол-во кластеров')
 
         ttk.Label(self.clf_conf_frm, text='n_init').grid(row=2, column=1, columnspan=1, **pad)
         self.n_init_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['n_init'], **ent_options)
         self.n_init_ent.grid(row=3, column=1, columnspan=1, **pad)
+        CreateToolTip(self.n_init_ent, text='Сколько раз выполнится алгоритм\n'
+                                               'с разными начальными значениями\n'
+                                               'центроидов')
+
 
         ttk.Label(self.clf_conf_frm, text='init').grid(row=4, column=0, columnspan=1, **pad)
         self.algorithm_cb = ttk.Combobox(self.clf_conf_frm, values=['k-means++', 'random'], **ent_options)
         self.algorithm_cb.grid(row=5, column=0, columnspan=1, **pad)
         self.algorithm_cb.current(0)
         self.default_params['init'] = self.algorithm_cb
+        CreateToolTip(self.algorithm_cb, text='Метод выбора начальных\n'
+                                               'значений центров кластеров')
 
 
         ttk.Label(self.clf_conf_frm, text='algorithm').grid(row=4, column=1, columnspan=1, **pad)
@@ -309,6 +358,8 @@ class KMeansFrame(tk.Frame):
         self.algorithm_cb.grid(row=5, column=1, columnspan=1, **pad)
         self.algorithm_cb.current(0)
         self.default_params['algorithm'] = self.algorithm_cb
+        CreateToolTip(self.algorithm_cb, text='Используемый алгоритм k-means')
+
 
         btn_pack = {
             'side': tk.LEFT,
@@ -600,15 +651,6 @@ class KMeansFrame(tk.Frame):
                                                                         name=name_ent.get(),
                                                                         desc=desc_text.get("1.0", "end-1c")),
                                     window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
-
-
-
-
-
-
-
-
-
 
 
 #
@@ -964,82 +1006,148 @@ class KMeansFrame(tk.Frame):
 #
 
 class DBSCANFrame(tk.Frame):
-    def __init__(self, parent, entry, pd_data):
+    def __init__(self, parent, entry, pd_data, pd_data2, pd_data3):
         tk.Frame.__init__(self, parent)
+        self.master = parent
         self.entry = entry
         self.pd_data = pd_data
+        self.pd_data2 = pd_data2
+        self.pd_data3 = pd_data3
         self.alg = DBSCAN
-        lb_frm = tk.LabelFrame(self, text='Конфигурация алгоритма DBSCAN')
-        lb_frm.pack(fill=tk.BOTH, expand=1)
+        self.lb_frm = ttk.Labelframe(self, text='Конфигурация алгоритма DBSCAN')
+        self.lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1, padx=5, pady=5)
+        self.clf_conf_frm = tk.Frame(self.lb_frm)  # фрейм для установления объектов по центру
+        self.clf_conf_frm.pack()
+        self.btn_frm = tk.Frame(self)
+        self.btn_frm.pack(side=tk.TOP)
 
-        # elkan_info = """        Для работы алгоритма K means необходимо задать количество кластеров.
-        # Для этого выберите точку перегиба на графике ниже
-        # и занесите это количество в n_clusters."""
-        # tk.Label(lb_frm, text=elkan_info, justify=tk.LEFT).pack(pady=2)
-        # ttk.Button(lb_frm, text='Выбрать количество кластеров', command=self.get_elkan_graph).pack(pady=5)
-
-        self.conf_frm = tk.Frame(lb_frm)
+        self.conf_frm = tk.Frame(self.lb_frm)
         self.conf_frm.pack()
 
         self.default_params = {
-            # 'n_clusters': tk.IntVar(self.conf_frm, value=8),
-            # 'n_init': tk.StringVar(self.conf_frm, value=10)
-            # 'random_state': tk.StringVar(self.conf_frm, value='None')
             'eps': tk.StringVar(self.conf_frm, value=0.5),
             'min_samples': tk.IntVar(self.conf_frm, value=5),
             'leaf_size': tk.IntVar(self.conf_frm, value=30)
         }
-        opt = {
-            'width': 20,
+        self.params = {}
+
+        ent_options = {
+            'width': 15,
             'justify': tk.CENTER
         }
         pad = {
             'padx': 15,
             'pady': 3
         }
-        # tk.Label(self.conf_frm, text='eps').grid(row=0, column=0, **pad)
-        # self.n_clusters_sb = tk.Spinbox(self.conf_frm, textvariable=self.default_params['n_clusters'],
-        #                                 from_=2, to=15, **opt)
-        # self.n_clusters_sb.grid(row=1, column=0, **pad)
 
-        tk.Label(self.conf_frm, text='eps').grid(row=0, column=0, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['eps'], **opt)
-        self.n_init_ent.grid(row=1, column=0, **pad)
+        ttk.Label(self.clf_conf_frm, text='eps').grid(row=2, column=0, columnspan=1, **pad)
+        self.n_clusters_sb = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['eps'], **ent_options)
+        self.n_clusters_sb.grid(row=3, column=0, columnspan=1, **pad)
+        CreateToolTip(self.n_clusters_sb, text='Радиус окружности, с помощью которой\n'
+                                               'ведется поиск ближайших точек')
 
-        tk.Label(self.conf_frm, text='min_samples').grid(row=0, column=1, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['min_samples'], **opt)
-        self.n_init_ent.grid(row=1, column=1, **pad)
+        ttk.Label(self.clf_conf_frm, text='min_samples').grid(row=2, column=1, columnspan=1, **pad)
+        self.n_init_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['min_samples'], **ent_options)
+        self.n_init_ent.grid(row=3, column=1, columnspan=1, **pad)
+        CreateToolTip(self.n_init_ent, text='Количество точек, коорое должно попадать\n'
+                                            'в радиус, чтобы точка, от которой построен\n'
+                                            'радиус считалась основной')
 
-        tk.Label(self.conf_frm, text='leaf_size').grid(row=2, column=0, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['leaf_size'], **opt)
-        self.n_init_ent.grid(row=3, column=0, **pad)
+        ttk.Label(self.clf_conf_frm, text='leaf_size').grid(row=4, column=0, columnspan=1, **pad)
+        self.n_init_ent = tk.Entry(self.clf_conf_frm, textvariable=self.default_params['leaf_size'], **ent_options)
+        self.n_init_ent.grid(row=5, column=0, columnspan=1, **pad)
+        CreateToolTip(self.n_init_ent, text='Размер листьев, передаваемый в BallTree или KDTree.\n'
+                                            'Может влиять на скорость построения')
 
-        tk.Label(self.conf_frm, text='algorithm').grid(row=2, column=1, **pad)
-        self.algorithm_cb = ttk.Combobox(self.conf_frm, values=['auto', 'ball_tree', 'kd_tree', 'brute'], **opt)
-        self.algorithm_cb.grid(row=3, column=1, **pad)
+        ttk.Label(self.clf_conf_frm, text='algorithm').grid(row=4, column=1, columnspan=1, **pad)
+        self.algorithm_cb = ttk.Combobox(self.clf_conf_frm, values=['auto', 'ball_tree', 'kd_tree', 'brute'], **ent_options)
+        self.algorithm_cb.grid(row=5, column=1, columnspan=1, **pad)
         self.algorithm_cb.current(0)
         self.default_params['algorithm'] = self.algorithm_cb
+        CreateToolTip(self.algorithm_cb, text='Алгоритм, который будет использоваться\n'
+                                              'модулем Nearest Neighbors для вычисления\n'
+                                              'расстояний между точками и поиска соседей')
 
-        ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+        btn_pack = {
+            'side': tk.LEFT,
+            'padx': 10,
+            'pady': 5
+        }
+
+        ttk.Button(self.clf_conf_frm, text='Подтвердить', command=self.fit).grid(columnspan=2, padx=15, pady=8)
         self.isFitted = False
 
-        vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
-        vis_lb_frm.pack(**pad)
-        tk.Label(vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+        self.accuracy = '...'  # Средняя точность
+        self.acc_lbl = ttk.Label(self.clf_conf_frm, text=f'Точность модели: '+str(self.accuracy))
+        self.acc_lbl.grid(columnspan=2, **pad)
+
+        self.vis_lb_frm = ttk.LabelFrame(self.clf_conf_frm, text='Визуализация кластеров')
+        self.vis_lb_frm.grid(columnspan=2)
+        tk.Label(self.vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
                                                                                           **pad)
-        self.col1_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+        self.col1_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
         self.col1_cb.grid(row=1, column=0, **pad)
-        self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+        self.col2_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
         self.col2_cb.grid(row=1, column=1, **pad)
-        ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
-                                                                                      **pad)
-        ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+        ttk.Button(self.vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+                                                                                       **pad)
+        self.col3_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
+        self.col3_cb.grid(row=3, column=0, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Профили кластеров', command=self.clstr_profile).grid(row=4, column=0, **pad)
+
+        self.col4_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col4_cb.grid(row=3, column=1, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Характеристики кластера', command=self.clstr_characteristics).grid(row=4, column=1, columnspan=2, **pad)
+
+        tk.Label(self.vis_lb_frm, text='Для сравнения кластеров выберите два кластера:').grid(row=5, column=0, columnspan=2, **pad)
+
+        self.col5_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col5_cb.grid(row=6, column=0, **pad)
+
+        self.col6_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col6_cb.grid(row=6, column=1, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Сравнение кластеров', command=self.clstr_compare).grid(row=7, column=0, columnspan=2, **pad)
+
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).grid(**pad)
 
     def fit(self):
+        self.pd_data.dropna(axis=0, inplace=True, how='any')
+        self.pd_data3.dropna(axis=0, inplace=True, how='any')
+        str_col_names = []
+        for name in self.pd_data.columns:
+            if (type(self.pd_data[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data[name] = le.fit_transform(self.pd_data[name])
+        # for pd_data3
+        for name in self.pd_data3.columns:
+            if (type(self.pd_data3[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data3[name] = le.fit_transform(self.pd_data3[name])
+        #
         self.alg = self.get_alg()
+        # if self.alg.fit_predict(self.pd_data) != -1:
         self.pd_data['Clusters'] = self.alg.fit_predict(self.pd_data)
+        self.pd_data2['Clusters'] = self.pd_data['Clusters']
         self.isFitted = True
         print('Модель обучена')
+        unique_clstr = pd.unique(self.pd_data['Clusters'])
+        sort_clstr = sorted(unique_clstr)
+        # print(sort_clstr)
+        # accuracy
+        if len(sort_clstr) > 1:
+            self.accuracy = metrics.silhouette_score(self.pd_data3, self.alg.fit_predict(self.pd_data))
+        self.acc_lbl.configure(text=f'Точность модели: '+str(self.accuracy))
+        self.col4_cb.configure(values=sort_clstr)
+        self.col5_cb.configure(values=sort_clstr)
+        self.col6_cb.configure(values=sort_clstr)
+
 
     def get_params(self):
         params = {}
@@ -1065,39 +1173,288 @@ class DBSCANFrame(tk.Frame):
         if self.isFitted:
             col1 = self.col1_cb.get()
             col2 = self.col2_cb.get()
-            # centroids = self.alg.cluster_centers_
             plt.figure(1, figsize=(10, 6))
             sns.set_theme()
             sns.set_style('whitegrid')
             sns.set_context('talk')
             sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
-            # sns.scatterplot(x=col1[:, self.pd_data.columns.get_loc(col1)],
-            #                 y=col2[:, self.pd_data.columns.get_loc(col2)],
-            #                 color='black', marker='s')
             plt.show()
 
+    def clstr_profile(self):
+        unique_clstr = pd.unique(self.pd_data2['Clusters'])
+        len_clstr = len(unique_clstr)
+        sort_clstr = sorted(unique_clstr)
+        cols = []
+        cols.insert(0, (self.col3_cb.get()))
+        df_one = DataFrame()
+        res1 = DataFrame()
+        for j in range(len(cols)):
+            unique_attr_2 = pd.unique(self.pd_data2[cols[j]])
+            unique_amount_norm = self.pd_data2[cols[j]].value_counts().sort_index(ascending=False).to_frame()
+            df_all = unique_amount_norm.T
+            for i in sort_clstr:
+                for index, row in self.pd_data2.iterrows():
+                    if row['Clusters'] == sort_clstr[i]:
+                        df_one = pd.concat([df_one, row.to_frame().T], ignore_index=True)
+                res1 = pd.concat(
+                    [res1, df_one[cols[j]].value_counts(normalize=True).sort_index(ascending=False).to_frame().T])
+                df_one = DataFrame()
+            res2 = res1
+            res2.index = Series(sort_clstr)
+            if (type(unique_attr_2[1]) == str):
+                f, ax = plt.subplots(1, 2, figsize=(20, 10), dpi=80)
+                f.suptitle('Атрибут ' + cols[j], fontsize=22)
+                df_all.plot.bar(ax=ax[0], stacked='True', alpha=0.5)
+                ax[0].set_title('Заполнение по всем кластерам (' + str(len_clstr) + ')', fontsize=12)
+                res2.plot.bar(ax=ax[1], stacked='True', alpha=0.5)
+                ax[1].set_title('Кластеры', fontsize=12)
+                plt.show()
+            else:
+                if cols[j] == 'Clusters':
+                    pass
+                else:
+                    f, ax = plt.subplots(1, 2, figsize=(20, 10), dpi=80)
+                    f.suptitle('Атрибут ' + cols[j], fontsize=22)
+                    sns.boxplot(ax=ax[0], y=self.pd_data2[cols[j]], data=self.pd_data2, notch=False, linewidth=2.5)
+                    ax[0].set_title("Диапазон значений (Y) атрибута " + cols[j] + "(X)", fontsize=12)
+                    sns.boxplot(ax=ax[1], x='Clusters', y=cols[j], data=self.pd_data2, notch=False)
+                    ax[1].set_title('Рапределение значений атрибута ' + cols[j] + ' (Y) в каждом кластере (X)',
+                                    fontsize=12)
+                    plt.show()
+            res1 = DataFrame()
+
+
+    def clstr_characteristics(self):
+        unique_clstr = pd.unique(self.pd_data2['Clusters'])
+        sort_clstr = sorted(unique_clstr)
+        df_comp = DataFrame()
+        df_comp_all = DataFrame()
+        sort_clstr_2 = []
+        sort_clstr_2.insert(0, (int(self.col4_cb.get())))
+        for i in sort_clstr_2:
+            for index, row in self.pd_data2.iterrows():
+                if row['Clusters'] == sort_clstr[i]:
+                    df_comp = pd.concat([df_comp, row.to_frame().T], ignore_index=True)
+            del df_comp['Clusters']
+            col = df_comp.columns
+            for j in col:
+                unique_amount = round(df_comp[j].value_counts(normalize=True).to_frame() * 100, 1)
+                unique_amount.index = j + ' = ' + unique_amount.index.astype(str)
+                unique_amount = unique_amount.rename(columns={j: 'prob'})
+                df_comp_all = (pd.concat([df_comp_all, unique_amount]).sort_values(by='prob', ascending=False)).head(10)
+            # Draw plot
+            fig, ax = plt.subplots(figsize=(16, 18), facecolor='white', dpi=80)
+            ax.vlines(x=df_comp_all.index, ymin=0, ymax=df_comp_all.prob, color='firebrick', alpha=0.7, linewidth=50)
+            # Annotate Text
+            for k, prob in enumerate(df_comp_all.prob):
+                ax.text(k, prob + 0.5, round(prob, 1), horizontalalignment='center')
+            # Title, Label, Ticks and Ylim
+            ax.set_title('Влияние значений атрибутов на кластер ' + str(sort_clstr[i]), fontdict={'size': 22})
+            ax.set(ylabel='Probability', ylim=(0, 100))
+            plt.xticks(df_comp_all.index, rotation=60, horizontalalignment='right', fontsize=12)
+            plt.show()
+            # clear df
+            df_comp = DataFrame()
+            df_comp_all = DataFrame()
+
+    def clstr_compare(self):
+        df_comp_clstrs = DataFrame()
+        df_comp_two_clstrs = DataFrame()
+        df_comp_two_clstrs_all = DataFrame()
+        two_clstr = []
+        two_clstr.insert(0, (int(self.col5_cb.get())))
+        two_clstr.insert(1, (int(self.col6_cb.get())))
+        for i in range(2):
+            for index, row in self.pd_data2.iterrows():
+                if row['Clusters'] == two_clstr[i]:
+                    df_comp_clstrs = pd.concat([df_comp_clstrs, row.to_frame().T], ignore_index=True)
+            del df_comp_clstrs['Clusters']
+            col = df_comp_clstrs.columns
+            for j in col:
+                unique_amount = round(df_comp_clstrs[j].value_counts(normalize=True).to_frame() * 100, 1)
+                unique_amount.index = '(' + str(two_clstr[i]) + ') ' + j + ' = ' + unique_amount.index.astype(str)
+                unique_amount = unique_amount.rename(columns={j: 'prob'})
+                df_comp_two_clstrs = (
+                    pd.concat([df_comp_two_clstrs, unique_amount]).sort_values(by='prob', ascending=False)).head(10)
+                df_comp_two_clstrs['Clusters'] = two_clstr[i]
+            df_comp_two_clstrs_all = pd.concat([df_comp_two_clstrs_all, df_comp_two_clstrs]).sort_values(by='prob',
+                                                                                                         ascending=False)
+            # clear df
+            df_comp_clstrs = DataFrame()
+            df_comp_two_clstrs = DataFrame()
+        # Замена значений пеовго кластера на "-"
+        df_comp_two_clstrs_all.loc[
+            (df_comp_two_clstrs_all.Clusters == two_clstr[0]), ('prob')] = df_comp_two_clstrs_all.prob * (-1)
+        del df_comp_two_clstrs_all['Clusters']
+        # Draw plot
+        df_comp_two_clstrs_all['colors'] = ['red' if x < 0 else 'green' for x in df_comp_two_clstrs_all['prob']]
+        plt.figure(figsize=(18, 10), dpi=80)
+        plt.hlines(y=df_comp_two_clstrs_all.index, xmin=0, xmax=df_comp_two_clstrs_all.prob,
+                   color=df_comp_two_clstrs_all.colors, alpha=0.4, linewidth=5)
+        # Decorations
+        plt.gca().set(ylabel='$Атрибуты и их значения$', xlabel='$Вероятность$')
+        plt.yticks(df_comp_two_clstrs_all.index, fontsize=12)
+        plt.title('Сравнение кластеров ' + str(two_clstr[0]) + ' и ' + str(two_clstr[1]), fontdict={'size': 20})
+        plt.grid(linestyle='--', alpha=0.5)
+        plt.show()
+
     def save(self):
-        save_model(self.entry, self.alg)
-        print('Модель сохранена!')
+        pad = {
+            'padx': 5,
+            'pady': 5
+        }
+        window = tk.Toplevel(self.master)
+        ttk.Label(window, text='Название модели:').grid(row=0, column=0,  **pad)
+        name_ent = ttk.Entry(window)
+        name_ent.grid(row=0, column=1, sticky=tk.W, **pad)
+        ttk.Label(window, text='Описание модели:').grid(row=1, column=0, **pad)
+        desc_text = tk.Text(window, width=30, height=5)
+        desc_text.grid(row=1, column=1, **pad)
+        ttk.Button(window, text='Сохранить',
+                   command=lambda: [save_model(self.entry, self.alg,
+                                               # self.accuracy,
+                                                                        name=name_ent.get(),
+                                                                        desc=desc_text.get("1.0", "end-1c")),
+                                    window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
+
+
+
+# class DBSCANFrame(tk.Frame):
+#     def __init__(self, parent, entry, pd_data):
+#         tk.Frame.__init__(self, parent)
+#         self.entry = entry
+#         self.pd_data = pd_data
+#         self.alg = DBSCAN
+#         lb_frm = tk.LabelFrame(self, text='Конфигурация алгоритма DBSCAN')
+#         lb_frm.pack(fill=tk.BOTH, expand=1)
+#
+#         self.conf_frm = tk.Frame(lb_frm)
+#         self.conf_frm.pack()
+#
+#         self.default_params = {
+#             'eps': tk.StringVar(self.conf_frm, value=0.5),
+#             'min_samples': tk.IntVar(self.conf_frm, value=5),
+#             'leaf_size': tk.IntVar(self.conf_frm, value=30)
+#         }
+#         opt = {
+#             'width': 20,
+#             'justify': tk.CENTER
+#         }
+#         pad = {
+#             'padx': 15,
+#             'pady': 3
+#         }
+#         # tk.Label(self.conf_frm, text='eps').grid(row=0, column=0, **pad)
+#         # self.n_clusters_sb = tk.Spinbox(self.conf_frm, textvariable=self.default_params['n_clusters'],
+#         #                                 from_=2, to=15, **opt)
+#         # self.n_clusters_sb.grid(row=1, column=0, **pad)
+#
+#         tk.Label(self.conf_frm, text='eps').grid(row=0, column=0, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['eps'], **opt)
+#         self.n_init_ent.grid(row=1, column=0, **pad)
+#
+#         tk.Label(self.conf_frm, text='min_samples').grid(row=0, column=1, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['min_samples'], **opt)
+#         self.n_init_ent.grid(row=1, column=1, **pad)
+#
+#         tk.Label(self.conf_frm, text='leaf_size').grid(row=2, column=0, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['leaf_size'], **opt)
+#         self.n_init_ent.grid(row=3, column=0, **pad)
+#
+#         tk.Label(self.conf_frm, text='algorithm').grid(row=2, column=1, **pad)
+#         self.algorithm_cb = ttk.Combobox(self.conf_frm, values=['auto', 'ball_tree', 'kd_tree', 'brute'], **opt)
+#         self.algorithm_cb.grid(row=3, column=1, **pad)
+#         self.algorithm_cb.current(0)
+#         self.default_params['algorithm'] = self.algorithm_cb
+#
+#         ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+#         self.isFitted = False
+#
+#         vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
+#         vis_lb_frm.pack(**pad)
+#         tk.Label(vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+#                                                                                           **pad)
+#         self.col1_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+#         self.col1_cb.grid(row=1, column=0, **pad)
+#         self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+#         self.col2_cb.grid(row=1, column=1, **pad)
+#         ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+#                                                                                       **pad)
+#         ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+#
+#     def fit(self):
+#         self.alg = self.get_alg()
+#         self.pd_data['Clusters'] = self.alg.fit_predict(self.pd_data)
+#         self.isFitted = True
+#         print('Модель обучена')
+#
+#     def get_params(self):
+#         params = {}
+#         for param, obj in self.default_params.items():
+#             try:
+#                 if obj.get() == 'None':
+#                     params[param] = None
+#                 elif param == 'eps':
+#                     params[param] = float(obj.get())
+#                 else:
+#                     params[param] = int(obj.get())
+#             except ValueError:
+#                 params[param] = obj.get()
+#         return params
+#
+#     def get_alg(self):
+#         params = self.get_params()
+#         if isinstance(self.alg, DBSCAN):
+#             self.alg = DBSCAN
+#         return self.alg(**params)
+#
+#     def get_plot(self):
+#         if self.isFitted:
+#             col1 = self.col1_cb.get()
+#             col2 = self.col2_cb.get()
+#             # centroids = self.alg.cluster_centers_
+#             plt.figure(1, figsize=(10, 6))
+#             sns.set_theme()
+#             sns.set_style('whitegrid')
+#             sns.set_context('talk')
+#             sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
+#             # sns.scatterplot(x=col1[:, self.pd_data.columns.get_loc(col1)],
+#             #                 y=col2[:, self.pd_data.columns.get_loc(col2)],
+#             #                 color='black', marker='s')
+#             plt.show()
+#
+#     def save(self):
+#         save_model(self.entry, self.alg)
+#         print('Модель сохранена!')
 
 
 class CMeansFrame(tk.Frame):
-    def __init__(self, parent, entry, pd_data):
+    def __init__(self, parent, entry, pd_data, pd_data2, pd_data3):
         tk.Frame.__init__(self, parent)
+        self.master = parent
         self.entry = entry
         self.pd_data = pd_data
+        self.pd_data2 = pd_data2
+        self.pd_data3 = pd_data3
         self.alg = FCM
-        lb_frm = tk.LabelFrame(self, text='Конфигурация алгоритма C-Means')
-        lb_frm.pack(fill=tk.BOTH, expand=1)
+        # self.fcm = FCM
+        self.lb_frm = ttk.Labelframe(self, text='Конфигурация алгоритма C-means')
+        self.lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1, padx=5, pady=5)
+        self.clf_conf_frm = tk.Frame(self.lb_frm)  # фрейм для установления объектов по центру
+        self.clf_conf_frm.pack()
+        self.btn_frm = tk.Frame(self)
+        self.btn_frm.pack(side=tk.TOP)
 
-        self.conf_frm = tk.Frame(lb_frm)
+        self.conf_frm = tk.Frame(self.lb_frm)
         self.conf_frm.pack()
 
         self.default_params = {
             'n_clusters': tk.IntVar(self.conf_frm, value=2)
         }
-        opt = {
-            'width': 20,
+        self.params = {}
+
+        ent_options = {
+            'width': 15,
             'justify': tk.CENTER
         }
         pad = {
@@ -1105,30 +1462,108 @@ class CMeansFrame(tk.Frame):
             'pady': 3
         }
 
-        tk.Label(self.conf_frm, text='n_clusters').grid(row=0, column=0, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['n_clusters'], **opt)
-        self.n_init_ent.grid(row=1, column=0, **pad)
+        ttk.Label(self.clf_conf_frm, text='n_clusters').grid(row=2, column=0, columnspan=2, **pad)
+        # , padx=5)
+        self.n_clusters_sb = ttk.Spinbox(self.clf_conf_frm, textvariable=self.default_params['n_clusters'], from_=2, to=15, **ent_options)
+        self.n_clusters_sb.grid(row=3, column=0, columnspan=2, **pad)
+        CreateToolTip(self.n_clusters_sb, text='Количество кластеров')
 
-        ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+        btn_pack = {
+            'side': tk.LEFT,
+            'padx': 10,
+            'pady': 5
+        }
+
+        ttk.Button(self.clf_conf_frm, text='Подтвердить', command=self.fit).grid(columnspan=2, padx=15, pady=8)
         self.isFitted = False
 
-        vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
-        vis_lb_frm.pack(**pad)
-        tk.Label(vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+        self.accuracy = '...'  # Средняя точность
+        self.acc_lbl = ttk.Label(self.clf_conf_frm, text=f'Точность модели: '+str(self.accuracy))
+        self.acc_lbl.grid(columnspan=2, **pad)
+
+        self.vis_lb_frm = ttk.LabelFrame(self.clf_conf_frm, text='Визуализация кластеров')
+        self.vis_lb_frm.grid(columnspan=2)
+        tk.Label(self.vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
                                                                                           **pad)
-        self.col1_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+        self.col1_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
         self.col1_cb.grid(row=1, column=0, **pad)
-        self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+        self.col2_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
         self.col2_cb.grid(row=1, column=1, **pad)
-        ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
-                                                                                      **pad)
-        ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+        ttk.Button(self.vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+                                                                                       **pad)
+        self.col3_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
+        self.col3_cb.grid(row=3, column=0, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Профили кластеров', command=self.clstr_profile).grid(row=4, column=0, **pad)
+
+        self.col4_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col4_cb.grid(row=3, column=1, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Характеристики кластера', command=self.clstr_characteristics).grid(row=4, column=1, columnspan=2, **pad)
+
+        tk.Label(self.vis_lb_frm, text='Для сравнения кластеров выберите два кластера:').grid(row=5, column=0, columnspan=2, **pad)
+
+        self.col5_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col5_cb.grid(row=6, column=0, **pad)
+
+        self.col6_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col6_cb.grid(row=6, column=1, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Сравнение кластеров', command=self.clstr_compare).grid(row=7, column=0, columnspan=2, **pad)
+
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).grid(**pad)
 
     def fit(self):
+        self.pd_data.dropna(axis=0, inplace=True, how='any')
+        self.pd_data3.dropna(axis=0, inplace=True, how='any')
+        str_col_names = []
+        for name in self.pd_data.columns:
+            if (type(self.pd_data[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data[name] = le.fit_transform(self.pd_data[name])
+        # for pd_data3
+        for name in self.pd_data3.columns:
+            if (type(self.pd_data3[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data3[name] = le.fit_transform(self.pd_data3[name])
+        #
         self.alg = self.get_alg()
-        self.pd_data['Clusters'] = self.alg.fit(self.pd_data)
+        # self.fcm = FCM(self.get_alg())
+        print(self.alg)
+        # self.fcm = FCM(self.get_alg())
+        # fcm = FCM.self.get_alg()
+        # fcm.fit(self.pd_data)
+        # self.pd_data['Clusters'] = self.fcm.soft_predict(self.pd_data)
+        # self.pd_data['Clusters'] = self.alg.fit(self.pd_data)
+        # self.X = self.pd_data.iloc[:].values
+        self.alg.fit(self.pd_data.iloc[:].values)
+        # print(labels)
+        # self.pd_data['Clusters'] = self.alg.soft_predict(self.pd_data.iloc[:].values)
+        # labels = self.alg.soft_predict(self.pd_data.iloc[:].values)
+        labels = self.alg.predict(self.pd_data.iloc[:].values)
+        # self.pd_data['Clusters'] = labels
+        # print(self.pd_data['Clusters'])
+        # print(labels)
+        self.pd_data['Clusters'] = self.alg.predict(self.pd_data.iloc[:].values)
+        self.pd_data2['Clusters'] = self.pd_data['Clusters']
         self.isFitted = True
         print('Модель обучена')
+        unique_clstr = pd.unique(self.pd_data['Clusters'])
+        sort_clstr = sorted(unique_clstr)
+        print(sort_clstr)
+        # accuracy
+        if len(sort_clstr) > 1:
+            self.accuracy = metrics.silhouette_score(self.pd_data3, self.alg.predict(self.pd_data.iloc[:].values))
+        self.acc_lbl.configure(text=f'Точность модели: '+str(self.accuracy))
+        self.col4_cb.configure(values=sort_clstr)
+        self.col5_cb.configure(values=sort_clstr)
+        self.col6_cb.configure(values=sort_clstr)
+        return labels
+
 
     def get_params(self):
         params = {}
@@ -1152,51 +1587,296 @@ class CMeansFrame(tk.Frame):
         if self.isFitted:
             col1 = self.col1_cb.get()
             col2 = self.col2_cb.get()
-            # centroids = self.alg.cluster_centers_
-            plt.figure(1, figsize=(10, 6))
-            sns.set_theme()
-            sns.set_style('whitegrid')
-            sns.set_context('talk')
-            sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
-            # sns.scatterplot(x=col1[:, self.pd_data.columns.get_loc(col1)],
-            #                 y=col2[:, self.pd_data.columns.get_loc(col2)],
-            #                 color='black', marker='s')
+            # plt.figure(1, figsize=(10, 6))
+            # sns.set_theme()
+            # sns.set_style('whitegrid')
+            # sns.set_context('talk')
+            fcm_labels = self.fit()
+            # print(fcm_labels)
+            # FCM.soft_predict(self.pd_data)
+            # fcm_centers = FCM.centers
+
+            f, axes = plt.subplots(1,2, figsize=(11,5))
+            # self.pd_data.columns.get_loc(col1), self.pd_data.columns.get_loc(col2)
+            # axes[0].scatter(x=col1, y=col2, alpha=.1)
+            # axes[1].scatter(x=col1, y=col2, c=fcm_labels, alpha=.1)
+            print(fcm_labels)
+            print(self.pd_data.iloc[:,1].values)
+            print(self.pd_data[col1].iloc[:].values)
+            print(self.pd_data[col2].iloc[:].values)
+            axes[0].scatter(self.pd_data[col1].iloc[:].values, self.pd_data[col2].iloc[:].values)
+            # , alpha=.1)
+            axes[1].scatter(self.pd_data[col1].iloc[:].values, self.pd_data[col2].iloc[:].values, c=fcm_labels)
+            # , alpha=.1)
+
+            # pd_data.iloc[:].values
+            # axes[1].scatter(fcm_centers)
+            # sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
             plt.show()
 
-    def save(self):
-        save_model(self.entry, self.alg)
-        print('Модель сохранена!')
+            # sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
+            # sns.scatterplot(x=centroids[:, self.pd_data.columns.get_loc(col1)],
+            #                 y=centroids[:, self.pd_data.columns.get_loc(col2)],
+            #                 color='black', marker='s')
 
+
+
+    def clstr_profile(self):
+        unique_clstr = pd.unique(self.pd_data2['Clusters'])
+        len_clstr = len(unique_clstr)
+        sort_clstr = sorted(unique_clstr)
+        cols = []
+        cols.insert(0, (self.col3_cb.get()))
+        df_one = DataFrame()
+        res1 = DataFrame()
+        for j in range(len(cols)):
+            unique_attr_2 = pd.unique(self.pd_data2[cols[j]])
+            unique_amount_norm = self.pd_data2[cols[j]].value_counts().sort_index(ascending=False).to_frame()
+            df_all = unique_amount_norm.T
+            for i in sort_clstr:
+                for index, row in self.pd_data2.iterrows():
+                    if row['Clusters'] == sort_clstr[i]:
+                        df_one = pd.concat([df_one, row.to_frame().T], ignore_index=True)
+                res1 = pd.concat(
+                    [res1, df_one[cols[j]].value_counts(normalize=True).sort_index(ascending=False).to_frame().T])
+                df_one = DataFrame()
+            res2 = res1
+            res2.index = Series(sort_clstr)
+            if (type(unique_attr_2[1]) == str):
+                f, ax = plt.subplots(1, 2, figsize=(20, 10), dpi=80)
+                f.suptitle('Атрибут ' + cols[j], fontsize=22)
+                df_all.plot.bar(ax=ax[0], stacked='True', alpha=0.5)
+                ax[0].set_title('Заполнение по всем кластерам (' + str(len_clstr) + ')', fontsize=12)
+                res2.plot.bar(ax=ax[1], stacked='True', alpha=0.5)
+                ax[1].set_title('Кластеры', fontsize=12)
+                plt.show()
+            else:
+                if cols[j] == 'Clusters':
+                    pass
+                else:
+                    f, ax = plt.subplots(1, 2, figsize=(20, 10), dpi=80)
+                    f.suptitle('Атрибут ' + cols[j], fontsize=22)
+                    sns.boxplot(ax=ax[0], y=self.pd_data2[cols[j]], data=self.pd_data2, notch=False, linewidth=2.5)
+                    ax[0].set_title("Диапазон значений (Y) атрибута " + cols[j] + "(X)", fontsize=12)
+                    sns.boxplot(ax=ax[1], x='Clusters', y=cols[j], data=self.pd_data2, notch=False)
+                    ax[1].set_title('Рапределение значений атрибута ' + cols[j] + ' (Y) в каждом кластере (X)',
+                                    fontsize=12)
+                    plt.show()
+            res1 = DataFrame()
+
+
+    def clstr_characteristics(self):
+        unique_clstr = pd.unique(self.pd_data2['Clusters'])
+        sort_clstr = sorted(unique_clstr)
+        df_comp = DataFrame()
+        df_comp_all = DataFrame()
+        sort_clstr_2 = []
+        sort_clstr_2.insert(0, (int(self.col4_cb.get())))
+        for i in sort_clstr_2:
+            for index, row in self.pd_data2.iterrows():
+                if row['Clusters'] == sort_clstr[i]:
+                    df_comp = pd.concat([df_comp, row.to_frame().T], ignore_index=True)
+            del df_comp['Clusters']
+            col = df_comp.columns
+            for j in col:
+                unique_amount = round(df_comp[j].value_counts(normalize=True).to_frame() * 100, 1)
+                unique_amount.index = j + ' = ' + unique_amount.index.astype(str)
+                unique_amount = unique_amount.rename(columns={j: 'prob'})
+                df_comp_all = (pd.concat([df_comp_all, unique_amount]).sort_values(by='prob', ascending=False)).head(10)
+            # Draw plot
+            fig, ax = plt.subplots(figsize=(16, 18), facecolor='white', dpi=80)
+            ax.vlines(x=df_comp_all.index, ymin=0, ymax=df_comp_all.prob, color='firebrick', alpha=0.7, linewidth=50)
+            # Annotate Text
+            for k, prob in enumerate(df_comp_all.prob):
+                ax.text(k, prob + 0.5, round(prob, 1), horizontalalignment='center')
+            # Title, Label, Ticks and Ylim
+            ax.set_title('Влияние значений атрибутов на кластер ' + str(sort_clstr[i]), fontdict={'size': 22})
+            ax.set(ylabel='Probability', ylim=(0, 100))
+            plt.xticks(df_comp_all.index, rotation=60, horizontalalignment='right', fontsize=12)
+            plt.show()
+            # clear df
+            df_comp = DataFrame()
+            df_comp_all = DataFrame()
+
+    def clstr_compare(self):
+        df_comp_clstrs = DataFrame()
+        df_comp_two_clstrs = DataFrame()
+        df_comp_two_clstrs_all = DataFrame()
+        two_clstr = []
+        two_clstr.insert(0, (int(self.col5_cb.get())))
+        two_clstr.insert(1, (int(self.col6_cb.get())))
+        for i in range(2):
+            for index, row in self.pd_data2.iterrows():
+                if row['Clusters'] == two_clstr[i]:
+                    df_comp_clstrs = pd.concat([df_comp_clstrs, row.to_frame().T], ignore_index=True)
+            del df_comp_clstrs['Clusters']
+            col = df_comp_clstrs.columns
+            for j in col:
+                unique_amount = round(df_comp_clstrs[j].value_counts(normalize=True).to_frame() * 100, 1)
+                unique_amount.index = '(' + str(two_clstr[i]) + ') ' + j + ' = ' + unique_amount.index.astype(str)
+                unique_amount = unique_amount.rename(columns={j: 'prob'})
+                df_comp_two_clstrs = (
+                    pd.concat([df_comp_two_clstrs, unique_amount]).sort_values(by='prob', ascending=False)).head(10)
+                df_comp_two_clstrs['Clusters'] = two_clstr[i]
+            df_comp_two_clstrs_all = pd.concat([df_comp_two_clstrs_all, df_comp_two_clstrs]).sort_values(by='prob',
+                                                                                                         ascending=False)
+            # clear df
+            df_comp_clstrs = DataFrame()
+            df_comp_two_clstrs = DataFrame()
+        # Замена значений пеовго кластера на "-"
+        df_comp_two_clstrs_all.loc[
+            (df_comp_two_clstrs_all.Clusters == two_clstr[0]), ('prob')] = df_comp_two_clstrs_all.prob * (-1)
+        del df_comp_two_clstrs_all['Clusters']
+        # Draw plot
+        df_comp_two_clstrs_all['colors'] = ['red' if x < 0 else 'green' for x in df_comp_two_clstrs_all['prob']]
+        plt.figure(figsize=(18, 10), dpi=80)
+        plt.hlines(y=df_comp_two_clstrs_all.index, xmin=0, xmax=df_comp_two_clstrs_all.prob,
+                   color=df_comp_two_clstrs_all.colors, alpha=0.4, linewidth=5)
+        # Decorations
+        plt.gca().set(ylabel='$Атрибуты и их значения$', xlabel='$Вероятность$')
+        plt.yticks(df_comp_two_clstrs_all.index, fontsize=12)
+        plt.title('Сравнение кластеров ' + str(two_clstr[0]) + ' и ' + str(two_clstr[1]), fontdict={'size': 20})
+        plt.grid(linestyle='--', alpha=0.5)
+        plt.show()
+
+    def save(self):
+        pad = {
+            'padx': 5,
+            'pady': 5
+        }
+        window = tk.Toplevel(self.master)
+        ttk.Label(window, text='Название модели:').grid(row=0, column=0,  **pad)
+        name_ent = ttk.Entry(window)
+        name_ent.grid(row=0, column=1, sticky=tk.W, **pad)
+        ttk.Label(window, text='Описание модели:').grid(row=1, column=0, **pad)
+        desc_text = tk.Text(window, width=30, height=5)
+        desc_text.grid(row=1, column=1, **pad)
+        ttk.Button(window, text='Сохранить',
+                   command=lambda: [save_model(self.entry, self.alg,
+                                               # self.accuracy,
+                                                                        name=name_ent.get(),
+                                                                        desc=desc_text.get("1.0", "end-1c")),
+                                    window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
+
+
+
+
+
+# class CMeansFrame(tk.Frame):
+#     def __init__(self, parent, entry, pd_data):
+#         tk.Frame.__init__(self, parent)
+#         self.entry = entry
+#         self.pd_data = pd_data
+#         self.alg = FCM
+#         lb_frm = tk.LabelFrame(self, text='Конфигурация алгоритма C-Means')
+#         lb_frm.pack(fill=tk.BOTH, expand=1)
+#
+#         self.conf_frm = tk.Frame(lb_frm)
+#         self.conf_frm.pack()
+#
+#         self.default_params = {
+#             'n_clusters': tk.IntVar(self.conf_frm, value=2)
+#         }
+#         opt = {
+#             'width': 20,
+#             'justify': tk.CENTER
+#         }
+#         pad = {
+#             'padx': 15,
+#             'pady': 3
+#         }
+#
+#         tk.Label(self.conf_frm, text='n_clusters').grid(row=0, column=0, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['n_clusters'], **opt)
+#         self.n_init_ent.grid(row=1, column=0, **pad)
+#
+#         ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+#         self.isFitted = False
+#
+#         vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
+#         vis_lb_frm.pack(**pad)
+#         tk.Label(vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+#                                                                                           **pad)
+#         self.col1_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+#         self.col1_cb.grid(row=1, column=0, **pad)
+#         self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+#         self.col2_cb.grid(row=1, column=1, **pad)
+#         ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+#                                                                                       **pad)
+#         ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+#
+#     def fit(self):
+#         self.alg = self.get_alg()
+#         self.pd_data['Clusters'] = self.alg.fit(self.pd_data)
+#         self.isFitted = True
+#         print('Модель обучена')
+#
+#     def get_params(self):
+#         params = {}
+#         for param, obj in self.default_params.items():
+#             try:
+#                 if obj.get() == 'None':
+#                     params[param] = None
+#                 else:
+#                     params[param] = int(obj.get())
+#             except ValueError:
+#                 params[param] = obj.get()
+#         return params
+#
+#     def get_alg(self):
+#         params = self.get_params()
+#         if isinstance(self.alg, FCM):
+#             self.alg = FCM
+#         return self.alg(**params)
+#
+#     def get_plot(self):
+#         if self.isFitted:
+#             col1 = self.col1_cb.get()
+#             col2 = self.col2_cb.get()
+#             # centroids = self.alg.cluster_centers_
+#             plt.figure(1, figsize=(10, 6))
+#             sns.set_theme()
+#             sns.set_style('whitegrid')
+#             sns.set_context('talk')
+#             sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
+#             # sns.scatterplot(x=col1[:, self.pd_data.columns.get_loc(col1)],
+#             #                 y=col2[:, self.pd_data.columns.get_loc(col2)],
+#             #                 color='black', marker='s')
+#             plt.show()
+#
+#     def save(self):
+#         save_model(self.entry, self.alg)
+#         print('Модель сохранена!')
 
 
 class AgglFrame(tk.Frame):
-    def __init__(self, parent, entry, pd_data):
+    def __init__(self, parent, entry, pd_data, pd_data2, pd_data3):
         tk.Frame.__init__(self, parent)
+        self.master = parent
         self.entry = entry
         self.pd_data = pd_data
-        self.alg = DBSCAN
-        lb_frm = tk.LabelFrame(self, text='Конфигурация алгоритма DBSCAN')
-        lb_frm.pack(fill=tk.BOTH, expand=1)
+        self.pd_data2 = pd_data2
+        self.pd_data3 = pd_data3
+        self.alg = AgglomerativeClustering
+        self.lb_frm = ttk.Labelframe(self, text='Конфигурация алгоритма иерархической кластеризации')
+        self.lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1, padx=5, pady=5)
+        self.clf_conf_frm = tk.Frame(self.lb_frm)  # фрейм для установления объектов по центру
+        self.clf_conf_frm.pack()
+        self.btn_frm = tk.Frame(self)
+        self.btn_frm.pack(side=tk.TOP)
 
-        # elkan_info = """        Для работы алгоритма K means необходимо задать количество кластеров.
-        # Для этого выберите точку перегиба на графике ниже
-        # и занесите это количество в n_clusters."""
-        # tk.Label(lb_frm, text=elkan_info, justify=tk.LEFT).pack(pady=2)
-        # ttk.Button(lb_frm, text='Выбрать количество кластеров', command=self.get_elkan_graph).pack(pady=5)
-
-        self.conf_frm = tk.Frame(lb_frm)
+        self.conf_frm = tk.Frame(self.lb_frm)
         self.conf_frm.pack()
 
         self.default_params = {
-            # 'n_clusters': tk.IntVar(self.conf_frm, value=8),
-            # 'n_init': tk.StringVar(self.conf_frm, value=10)
-            # 'random_state': tk.StringVar(self.conf_frm, value='None')
-            'eps': tk.StringVar(self.conf_frm, value=0.5),
-            'min_samples': tk.IntVar(self.conf_frm, value=5),
-            'leaf_size': tk.IntVar(self.conf_frm, value=30)
+            'n_clusters': tk.IntVar(self.conf_frm, value=2),
+            'affinity': tk.StringVar(self.conf_frm, value='euclidean'),
+            'linkage': tk.StringVar(self.conf_frm, value='ward')
         }
-        opt = {
-            'width': 20,
+        self.params = {}
+
+        ent_options = {
+            'width': 15,
             'justify': tk.CENTER
         }
         pad = {
@@ -1204,44 +1884,107 @@ class AgglFrame(tk.Frame):
             'pady': 3
         }
 
-        tk.Label(self.conf_frm, text='eps').grid(row=0, column=0, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['eps'], **opt)
-        self.n_init_ent.grid(row=1, column=0, **pad)
+        ttk.Label(self.clf_conf_frm, text='n_clusters').grid(row=2, column=0, columnspan=1, **pad)
+        self.n_clusters_sb = ttk.Spinbox(self.clf_conf_frm, textvariable=self.default_params['n_clusters'], from_=2, to=15, **ent_options)
+        self.n_clusters_sb.grid(row=3, column=0, columnspan=1, **pad)
+        CreateToolTip(self.n_clusters_sb, text='Количество кластеров')
 
-        tk.Label(self.conf_frm, text='min_samples').grid(row=0, column=1, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['min_samples'], **opt)
-        self.n_init_ent.grid(row=1, column=1, **pad)
-
-        tk.Label(self.conf_frm, text='leaf_size').grid(row=2, column=0, **pad)
-        self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['leaf_size'], **opt)
-        self.n_init_ent.grid(row=3, column=0, **pad)
-
-        tk.Label(self.conf_frm, text='algorithm').grid(row=2, column=1, **pad)
-        self.algorithm_cb = ttk.Combobox(self.conf_frm, values=['auto', 'ball_tree', 'kd_tree', 'brute'], **opt)
-        self.algorithm_cb.grid(row=3, column=1, **pad)
+        ttk.Label(self.clf_conf_frm, text='affinity').grid(row=2, column=1, columnspan=1, **pad)
+        self.algorithm_cb = ttk.Combobox(self.clf_conf_frm, values=['euclidean', 'l1', 'l2', 'manhattan', 'cosine'], **ent_options)
+        self.algorithm_cb.grid(row=3, column=1, columnspan=1, **pad)
         self.algorithm_cb.current(0)
-        self.default_params['algorithm'] = self.algorithm_cb
+        self.default_params['affinity'] = self.algorithm_cb
+        CreateToolTip(self.algorithm_cb, text='Метрика для вычисления расстояния между объектами.\n'
+                                              'Если linkage = "ward", то affinity должно принимать\n'
+                                              'значение "Euclidean"')
 
-        ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+        ttk.Label(self.clf_conf_frm, text='linkage').grid(row=4, columnspan=2, **pad)
+        self.algorithm_cb = ttk.Combobox(self.clf_conf_frm, values=['ward', 'complete', 'average', 'single'],
+                                         **ent_options)
+        self.algorithm_cb.grid(row=5, columnspan=2, **pad)
+        self.algorithm_cb.current(0)
+        self.default_params['linkage'] = self.algorithm_cb
+        CreateToolTip(self.algorithm_cb, text='Метрика для вычисления расстояния между кластерами')
+
+        btn_pack = {
+            'side': tk.LEFT,
+            'padx': 10,
+            'pady': 5
+        }
+
+        ttk.Button(self.clf_conf_frm, text='Подтвердить', command=self.fit).grid(columnspan=2, padx=15, pady=8)
         self.isFitted = False
 
-        vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
-        vis_lb_frm.pack(**pad)
-        tk.Label(vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+        self.accuracy = '...'  # Средняя точность
+        self.acc_lbl = ttk.Label(self.clf_conf_frm, text=f'Точность модели: '+str(self.accuracy))
+        self.acc_lbl.grid(columnspan=2, **pad)
+
+        self.vis_lb_frm = ttk.LabelFrame(self.clf_conf_frm, text='Визуализация кластеров')
+        self.vis_lb_frm.grid(columnspan=2)
+        tk.Label(self.vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
                                                                                           **pad)
-        self.col1_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+        self.col1_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
         self.col1_cb.grid(row=1, column=0, **pad)
-        self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+        self.col2_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
         self.col2_cb.grid(row=1, column=1, **pad)
-        ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
-                                                                                      **pad)
-        ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+        ttk.Button(self.vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+                                                                                       **pad)
+        self.col3_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
+        self.col3_cb.grid(row=3, column=0, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Профили кластеров', command=self.clstr_profile).grid(row=4, column=0, **pad)
+
+        self.col4_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col4_cb.grid(row=3, column=1, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Характеристики кластера', command=self.clstr_characteristics).grid(row=4, column=1, columnspan=2, **pad)
+
+        tk.Label(self.vis_lb_frm, text='Для сравнения кластеров выберите два кластера:').grid(row=5, column=0, columnspan=2, **pad)
+
+        self.col5_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col5_cb.grid(row=6, column=0, **pad)
+
+        self.col6_cb = ttk.Combobox(self.vis_lb_frm)
+        self.col6_cb.grid(row=6, column=1, **pad)
+
+        ttk.Button(self.vis_lb_frm, text='Сравнение кластеров', command=self.clstr_compare).grid(row=7, column=0, columnspan=2, **pad)
+
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).grid(**pad)
 
     def fit(self):
+        self.pd_data.dropna(axis=0, inplace=True, how='any')
+        self.pd_data3.dropna(axis=0, inplace=True, how='any')
+        str_col_names = []
+        for name in self.pd_data.columns:
+            if (type(self.pd_data[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data[name] = le.fit_transform(self.pd_data[name])
+        # for pd_data3
+        for name in self.pd_data3.columns:
+            if (type(self.pd_data3[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data3[name] = le.fit_transform(self.pd_data3[name])
+        #
         self.alg = self.get_alg()
         self.pd_data['Clusters'] = self.alg.fit_predict(self.pd_data)
+        self.pd_data2['Clusters'] = self.pd_data['Clusters']
         self.isFitted = True
         print('Модель обучена')
+        unique_clstr = pd.unique(self.pd_data['Clusters'])
+        sort_clstr = sorted(unique_clstr)
+        # print(sort_clstr)
+        # accuracy
+        if len(sort_clstr) > 1:
+            self.accuracy = metrics.silhouette_score(self.pd_data3, self.alg.fit_predict(self.pd_data))
+        self.acc_lbl.configure(text=f'Точность модели: '+str(self.accuracy))
+        self.col4_cb.configure(values=sort_clstr)
+        self.col5_cb.configure(values=sort_clstr)
+        self.col6_cb.configure(values=sort_clstr)
+
 
     def get_params(self):
         params = {}
@@ -1259,26 +2002,478 @@ class AgglFrame(tk.Frame):
 
     def get_alg(self):
         params = self.get_params()
-        if isinstance(self.alg, DBSCAN):
-            self.alg = DBSCAN
+        if isinstance(self.alg, AgglomerativeClustering):
+            self.alg = AgglomerativeClustering
         return self.alg(**params)
 
     def get_plot(self):
         if self.isFitted:
             col1 = self.col1_cb.get()
             col2 = self.col2_cb.get()
-            # centroids = self.alg.cluster_centers_
             plt.figure(1, figsize=(10, 6))
             sns.set_theme()
             sns.set_style('whitegrid')
             sns.set_context('talk')
             sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
-            # sns.scatterplot(x=col1[:, self.pd_data.columns.get_loc(col1)],
-            #                 y=col2[:, self.pd_data.columns.get_loc(col2)],
-            #                 color='black', marker='s')
             plt.show()
 
+    def clstr_profile(self):
+        unique_clstr = pd.unique(self.pd_data2['Clusters'])
+        len_clstr = len(unique_clstr)
+        sort_clstr = sorted(unique_clstr)
+        cols = []
+        cols.insert(0, (self.col3_cb.get()))
+        df_one = DataFrame()
+        res1 = DataFrame()
+        for j in range(len(cols)):
+            unique_attr_2 = pd.unique(self.pd_data2[cols[j]])
+            unique_amount_norm = self.pd_data2[cols[j]].value_counts().sort_index(ascending=False).to_frame()
+            df_all = unique_amount_norm.T
+            for i in sort_clstr:
+                for index, row in self.pd_data2.iterrows():
+                    if row['Clusters'] == sort_clstr[i]:
+                        df_one = pd.concat([df_one, row.to_frame().T], ignore_index=True)
+                res1 = pd.concat(
+                    [res1, df_one[cols[j]].value_counts(normalize=True).sort_index(ascending=False).to_frame().T])
+                df_one = DataFrame()
+            res2 = res1
+            res2.index = Series(sort_clstr)
+            if (type(unique_attr_2[1]) == str):
+                f, ax = plt.subplots(1, 2, figsize=(20, 10), dpi=80)
+                f.suptitle('Атрибут ' + cols[j], fontsize=22)
+                df_all.plot.bar(ax=ax[0], stacked='True', alpha=0.5)
+                ax[0].set_title('Заполнение по всем кластерам (' + str(len_clstr) + ')', fontsize=12)
+                res2.plot.bar(ax=ax[1], stacked='True', alpha=0.5)
+                ax[1].set_title('Кластеры', fontsize=12)
+                plt.show()
+            else:
+                if cols[j] == 'Clusters':
+                    pass
+                else:
+                    f, ax = plt.subplots(1, 2, figsize=(20, 10), dpi=80)
+                    f.suptitle('Атрибут ' + cols[j], fontsize=22)
+                    sns.boxplot(ax=ax[0], y=self.pd_data2[cols[j]], data=self.pd_data2, notch=False, linewidth=2.5)
+                    ax[0].set_title("Диапазон значений (Y) атрибута " + cols[j] + "(X)", fontsize=12)
+                    sns.boxplot(ax=ax[1], x='Clusters', y=cols[j], data=self.pd_data2, notch=False)
+                    ax[1].set_title('Рапределение значений атрибута ' + cols[j] + ' (Y) в каждом кластере (X)',
+                                    fontsize=12)
+                    plt.show()
+            res1 = DataFrame()
+
+
+    def clstr_characteristics(self):
+        unique_clstr = pd.unique(self.pd_data2['Clusters'])
+        sort_clstr = sorted(unique_clstr)
+        df_comp = DataFrame()
+        df_comp_all = DataFrame()
+        sort_clstr_2 = []
+        sort_clstr_2.insert(0, (int(self.col4_cb.get())))
+        for i in sort_clstr_2:
+            for index, row in self.pd_data2.iterrows():
+                if row['Clusters'] == sort_clstr[i]:
+                    df_comp = pd.concat([df_comp, row.to_frame().T], ignore_index=True)
+            del df_comp['Clusters']
+            col = df_comp.columns
+            for j in col:
+                unique_amount = round(df_comp[j].value_counts(normalize=True).to_frame() * 100, 1)
+                unique_amount.index = j + ' = ' + unique_amount.index.astype(str)
+                unique_amount = unique_amount.rename(columns={j: 'prob'})
+                df_comp_all = (pd.concat([df_comp_all, unique_amount]).sort_values(by='prob', ascending=False)).head(10)
+            # Draw plot
+            fig, ax = plt.subplots(figsize=(16, 18), facecolor='white', dpi=80)
+            ax.vlines(x=df_comp_all.index, ymin=0, ymax=df_comp_all.prob, color='firebrick', alpha=0.7, linewidth=50)
+            # Annotate Text
+            for k, prob in enumerate(df_comp_all.prob):
+                ax.text(k, prob + 0.5, round(prob, 1), horizontalalignment='center')
+            # Title, Label, Ticks and Ylim
+            ax.set_title('Влияние значений атрибутов на кластер ' + str(sort_clstr[i]), fontdict={'size': 22})
+            ax.set(ylabel='Probability', ylim=(0, 100))
+            plt.xticks(df_comp_all.index, rotation=60, horizontalalignment='right', fontsize=12)
+            plt.show()
+            # clear df
+            df_comp = DataFrame()
+            df_comp_all = DataFrame()
+
+    def clstr_compare(self):
+        df_comp_clstrs = DataFrame()
+        df_comp_two_clstrs = DataFrame()
+        df_comp_two_clstrs_all = DataFrame()
+        two_clstr = []
+        two_clstr.insert(0, (int(self.col5_cb.get())))
+        two_clstr.insert(1, (int(self.col6_cb.get())))
+        for i in range(2):
+            for index, row in self.pd_data2.iterrows():
+                if row['Clusters'] == two_clstr[i]:
+                    df_comp_clstrs = pd.concat([df_comp_clstrs, row.to_frame().T], ignore_index=True)
+            del df_comp_clstrs['Clusters']
+            col = df_comp_clstrs.columns
+            for j in col:
+                unique_amount = round(df_comp_clstrs[j].value_counts(normalize=True).to_frame() * 100, 1)
+                unique_amount.index = '(' + str(two_clstr[i]) + ') ' + j + ' = ' + unique_amount.index.astype(str)
+                unique_amount = unique_amount.rename(columns={j: 'prob'})
+                df_comp_two_clstrs = (
+                    pd.concat([df_comp_two_clstrs, unique_amount]).sort_values(by='prob', ascending=False)).head(10)
+                df_comp_two_clstrs['Clusters'] = two_clstr[i]
+            df_comp_two_clstrs_all = pd.concat([df_comp_two_clstrs_all, df_comp_two_clstrs]).sort_values(by='prob',
+                                                                                                         ascending=False)
+            # clear df
+            df_comp_clstrs = DataFrame()
+            df_comp_two_clstrs = DataFrame()
+        # Замена значений пеовго кластера на "-"
+        df_comp_two_clstrs_all.loc[
+            (df_comp_two_clstrs_all.Clusters == two_clstr[0]), ('prob')] = df_comp_two_clstrs_all.prob * (-1)
+        del df_comp_two_clstrs_all['Clusters']
+        # Draw plot
+        df_comp_two_clstrs_all['colors'] = ['red' if x < 0 else 'green' for x in df_comp_two_clstrs_all['prob']]
+        plt.figure(figsize=(18, 10), dpi=80)
+        plt.hlines(y=df_comp_two_clstrs_all.index, xmin=0, xmax=df_comp_two_clstrs_all.prob,
+                   color=df_comp_two_clstrs_all.colors, alpha=0.4, linewidth=5)
+        # Decorations
+        plt.gca().set(ylabel='$Атрибуты и их значения$', xlabel='$Вероятность$')
+        plt.yticks(df_comp_two_clstrs_all.index, fontsize=12)
+        plt.title('Сравнение кластеров ' + str(two_clstr[0]) + ' и ' + str(two_clstr[1]), fontdict={'size': 20})
+        plt.grid(linestyle='--', alpha=0.5)
+        plt.show()
+
     def save(self):
-        save_model(self.entry, self.alg)
-        print('Модель сохранена!')
+        pad = {
+            'padx': 5,
+            'pady': 5
+        }
+        window = tk.Toplevel(self.master)
+        ttk.Label(window, text='Название модели:').grid(row=0, column=0,  **pad)
+        name_ent = ttk.Entry(window)
+        name_ent.grid(row=0, column=1, sticky=tk.W, **pad)
+        ttk.Label(window, text='Описание модели:').grid(row=1, column=0, **pad)
+        desc_text = tk.Text(window, width=30, height=5)
+        desc_text.grid(row=1, column=1, **pad)
+        ttk.Button(window, text='Сохранить',
+                   command=lambda: [save_model(self.entry, self.alg,
+                                               # self.accuracy,
+                                                                        name=name_ent.get(),
+                                                                        desc=desc_text.get("1.0", "end-1c")),
+                                    window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
+
+# class AgglFrame(tk.Frame):
+#     def __init__(self, parent, entry, pd_data):
+#         tk.Frame.__init__(self, parent)
+#         self.entry = entry
+#         self.pd_data = pd_data
+#         self.alg = DBSCAN
+#         lb_frm = tk.LabelFrame(self, text='Конфигурация алгоритма DBSCAN')
+#         lb_frm.pack(fill=tk.BOTH, expand=1)
+#
+#         # elkan_info = """        Для работы алгоритма K means необходимо задать количество кластеров.
+#         # Для этого выберите точку перегиба на графике ниже
+#         # и занесите это количество в n_clusters."""
+#         # tk.Label(lb_frm, text=elkan_info, justify=tk.LEFT).pack(pady=2)
+#         # ttk.Button(lb_frm, text='Выбрать количество кластеров', command=self.get_elkan_graph).pack(pady=5)
+#
+#         self.conf_frm = tk.Frame(lb_frm)
+#         self.conf_frm.pack()
+#
+#         self.default_params = {
+#             # 'n_clusters': tk.IntVar(self.conf_frm, value=8),
+#             # 'n_init': tk.StringVar(self.conf_frm, value=10)
+#             # 'random_state': tk.StringVar(self.conf_frm, value='None')
+#             'eps': tk.StringVar(self.conf_frm, value=0.5),
+#             'min_samples': tk.IntVar(self.conf_frm, value=5),
+#             'leaf_size': tk.IntVar(self.conf_frm, value=30)
+#         }
+#         opt = {
+#             'width': 20,
+#             'justify': tk.CENTER
+#         }
+#         pad = {
+#             'padx': 15,
+#             'pady': 3
+#         }
+#
+#         tk.Label(self.conf_frm, text='eps').grid(row=0, column=0, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['eps'], **opt)
+#         self.n_init_ent.grid(row=1, column=0, **pad)
+#
+#         tk.Label(self.conf_frm, text='min_samples').grid(row=0, column=1, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['min_samples'], **opt)
+#         self.n_init_ent.grid(row=1, column=1, **pad)
+#
+#         tk.Label(self.conf_frm, text='leaf_size').grid(row=2, column=0, **pad)
+#         self.n_init_ent = tk.Entry(self.conf_frm, textvariable=self.default_params['leaf_size'], **opt)
+#         self.n_init_ent.grid(row=3, column=0, **pad)
+#
+#         tk.Label(self.conf_frm, text='algorithm').grid(row=2, column=1, **pad)
+#         self.algorithm_cb = ttk.Combobox(self.conf_frm, values=['auto', 'ball_tree', 'kd_tree', 'brute'], **opt)
+#         self.algorithm_cb.grid(row=3, column=1, **pad)
+#         self.algorithm_cb.current(0)
+#         self.default_params['algorithm'] = self.algorithm_cb
+#
+#         ttk.Button(lb_frm, text='Подтвердить', command=self.fit).pack(**pad)
+#         self.isFitted = False
+#
+#         vis_lb_frm = tk.LabelFrame(lb_frm, text='Визуализация кластеров')
+#         vis_lb_frm.pack(**pad)
+#         tk.Label(vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+#                                                                                           **pad)
+#         self.col1_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+#         self.col1_cb.grid(row=1, column=0, **pad)
+#         self.col2_cb = ttk.Combobox(vis_lb_frm, values=list(self.pd_data.columns))
+#         self.col2_cb.grid(row=1, column=1, **pad)
+#         ttk.Button(vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+#                                                                                       **pad)
+#         ttk.Button(lb_frm, text='Сохранить модель', command=self.save).pack(**pad)
+#
+#     def fit(self):
+#         self.alg = self.get_alg()
+#         self.pd_data['Clusters'] = self.alg.fit_predict(self.pd_data)
+#         self.isFitted = True
+#         print('Модель обучена')
+#
+#     def get_params(self):
+#         params = {}
+#         for param, obj in self.default_params.items():
+#             try:
+#                 if obj.get() == 'None':
+#                     params[param] = None
+#                 elif param == 'eps':
+#                     params[param] = float(obj.get())
+#                 else:
+#                     params[param] = int(obj.get())
+#             except ValueError:
+#                 params[param] = obj.get()
+#         return params
+#
+#     def get_alg(self):
+#         params = self.get_params()
+#         if isinstance(self.alg, DBSCAN):
+#             self.alg = DBSCAN
+#         return self.alg(**params)
+#
+#     def get_plot(self):
+#         if self.isFitted:
+#             col1 = self.col1_cb.get()
+#             col2 = self.col2_cb.get()
+#             # centroids = self.alg.cluster_centers_
+#             plt.figure(1, figsize=(10, 6))
+#             sns.set_theme()
+#             sns.set_style('whitegrid')
+#             sns.set_context('talk')
+#             sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
+#             # sns.scatterplot(x=col1[:, self.pd_data.columns.get_loc(col1)],
+#             #                 y=col2[:, self.pd_data.columns.get_loc(col2)],
+#             #                 color='black', marker='s')
+#             plt.show()
+#
+#     def save(self):
+#         save_model(self.entry, self.alg)
+#         print('Модель сохранена!')
+
+
+
+class CMeansSoftFrame(tk.Frame):
+    def __init__(self, parent, entry, pd_data, pd_data2, pd_data3):
+        tk.Frame.__init__(self, parent)
+        self.master = parent
+        self.entry = entry
+        self.pd_data = pd_data
+        self.pd_data2 = pd_data2
+        self.pd_data3 = pd_data3
+        self.alg = FCM
+        # self.fcm = FCM
+        self.lb_frm = ttk.Labelframe(self, text='Конфигурация алгоритма C-means (soft_predict)')
+        self.lb_frm.pack(side=tk.TOP, fill=tk.BOTH, expand=1, padx=5, pady=5)
+        self.clf_conf_frm = tk.Frame(self.lb_frm)  # фрейм для установления объектов по центру
+        self.clf_conf_frm.pack()
+        self.btn_frm = tk.Frame(self)
+        self.btn_frm.pack(side=tk.TOP)
+
+        self.conf_frm = tk.Frame(self.lb_frm)
+        self.conf_frm.pack()
+
+        self.default_params = {
+            'n_clusters': tk.IntVar(self.conf_frm, value=2)
+        }
+        self.params = {}
+
+        ent_options = {
+            'width': 15,
+            'justify': tk.CENTER
+        }
+        pad = {
+            'padx': 15,
+            'pady': 3
+        }
+
+        ttk.Label(self.clf_conf_frm, text='Кол-во кластеров').grid(row=2, column=0, columnspan=2, **pad)
+        self.n_clusters_sb = ttk.Spinbox(self.clf_conf_frm, textvariable=self.default_params['n_clusters'], from_=2, to=15, **ent_options)
+        self.n_clusters_sb.grid(row=3, column=0, columnspan=2, **pad)
+        CreateToolTip(self.n_clusters_sb, text='Количество кластеров')
+
+        btn_pack = {
+            'side': tk.LEFT,
+            'padx': 10,
+            'pady': 5
+        }
+
+        ttk.Button(self.clf_conf_frm, text='Подтвердить', command=self.fit).grid(columnspan=2, padx=15, pady=8)
+        self.isFitted = False
+
+        self.accuracy = '...'  # Средняя точность
+        self.acc_lbl = ttk.Label(self.clf_conf_frm, text=f'Точность модели: '+str(self.accuracy))
+        self.acc_lbl.grid(columnspan=2, **pad)
+
+        self.vis_lb_frm = ttk.LabelFrame(self.clf_conf_frm, text='Визуализация кластеров')
+        self.vis_lb_frm.grid(columnspan=2)
+        tk.Label(self.vis_lb_frm, text='Для отображения кластеров выберите две колонки:').grid(row=0, column=0, columnspan=2,
+                                                                                          **pad)
+        self.col1_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
+        self.col1_cb.grid(row=1, column=0, **pad)
+        self.col2_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
+        self.col2_cb.grid(row=1, column=1, **pad)
+        ttk.Button(self.vis_lb_frm, text='Отобразить кластеры', command=self.get_plot).grid(row=2, column=0, columnspan=2,
+                                                                                       **pad)
+        # self.col3_cb = ttk.Combobox(self.vis_lb_frm, values=list(self.pd_data.columns))
+        # self.col3_cb.grid(row=3, column=0, **pad)
+
+        # ttk.Button(self.vis_lb_frm, text='Профили кластеров', command=self.clstr_profile).grid(row=4, column=0, **pad)
+        #
+        # self.col4_cb = ttk.Combobox(self.vis_lb_frm)
+        # self.col4_cb.grid(row=3, column=1, **pad)
+        #
+        # ttk.Button(self.vis_lb_frm, text='Характеристики кластера', command=self.clstr_characteristics).grid(row=4, column=1, columnspan=2, **pad)
+        #
+        # tk.Label(self.vis_lb_frm, text='Для сравнения кластеров выберите два кластера:').grid(row=5, column=0, columnspan=2, **pad)
+
+        # self.col5_cb = ttk.Combobox(self.vis_lb_frm)
+        # self.col5_cb.grid(row=6, column=0, **pad)
+        #
+        # self.col6_cb = ttk.Combobox(self.vis_lb_frm)
+        # self.col6_cb.grid(row=6, column=1, **pad)
+
+        # ttk.Button(self.vis_lb_frm, text='Сравнение кластеров', command=self.clstr_compare).grid(row=7, column=0, columnspan=2, **pad)
+
+        ttk.Button(self.btn_frm, text='Сохранить модель', command=self.save).grid(**pad)
+
+    def fit(self):
+        self.pd_data.dropna(axis=0, inplace=True, how='any')
+        self.pd_data3.dropna(axis=0, inplace=True, how='any')
+        str_col_names = []
+        for name in self.pd_data.columns:
+            if (type(self.pd_data[name][1]) == str):
+                str_col_names.append(name)
+        le = LabelEncoder()
+        for name in str_col_names:
+            self.pd_data[name] = le.fit_transform(self.pd_data[name])
+        # for pd_data3
+        # for name in self.pd_data3.columns:
+        #     if (type(self.pd_data3[name][1]) == str):
+        #         str_col_names.append(name)
+        # le = LabelEncoder()
+        # for name in str_col_names:
+        #     self.pd_data3[name] = le.fit_transform(self.pd_data3[name])
+        #
+        self.alg = self.get_alg()
+        # self.fcm = FCM(self.get_alg())
+        print(self.alg)
+        # self.fcm = FCM(self.get_alg())
+        # fcm = FCM.self.get_alg()
+        # fcm.fit(self.pd_data)
+        # self.pd_data['Clusters'] = self.fcm.soft_predict(self.pd_data)
+        # self.pd_data['Clusters'] = self.alg.fit(self.pd_data)
+        # self.X = self.pd_data.iloc[:].values
+        self.alg.fit(self.pd_data.iloc[:].values)
+        # print(labels)
+        # self.pd_data['Clusters'] = self.alg.soft_predict(self.pd_data.iloc[:].values)
+        labels = self.alg.soft_predict(self.pd_data.iloc[:].values)
+        # labels = self.alg.predict(self.pd_data.iloc[:].values)
+        # self.pd_data['Clusters'] = labels
+        # print(self.pd_data['Clusters'])
+        # print(labels)
+        # self.pd_data['Clusters'] = self.alg(self.get_alg()).soft_predict(self.pd_data)
+        # self.pd_data2['Clusters'] = self.pd_data['Clusters']
+        self.isFitted = True
+        print('Модель обучена')
+        # unique_clstr = pd.unique(self.pd_data['Clusters'])
+        # sort_clstr = sorted(unique_clstr)
+        # print(sort_clstr)
+        # accuracy
+        # if len(sort_clstr) > 1:
+            # self.accuracy = metrics.silhouette_score(self.pd_data3, self.alg.fit_predict(self.pd_data))
+        self.acc_lbl.configure(text=f'Точность модели: '+str(self.accuracy))
+        # self.col4_cb.configure(values=sort_clstr)
+        # self.col5_cb.configure(values=sort_clstr)
+        # self.col6_cb.configure(values=sort_clstr)
+        return labels
+
+
+    def get_params(self):
+        params = {}
+        for param, obj in self.default_params.items():
+            try:
+                if obj.get() == 'None':
+                    params[param] = None
+                else:
+                    params[param] = int(obj.get())
+            except ValueError:
+                params[param] = obj.get()
+        return params
+
+    def get_alg(self):
+        params = self.get_params()
+        if isinstance(self.alg, FCM):
+            self.alg = FCM
+        return self.alg(**params)
+
+    def get_plot(self):
+        if self.isFitted:
+            col1 = self.col1_cb.get()
+            col2 = self.col2_cb.get()
+            # plt.figure(1, figsize=(10, 6))
+            # sns.set_theme()
+            # sns.set_style('whitegrid')
+            # sns.set_context('talk')
+            fcm_labels = self.fit()
+            # print(fcm_labels)
+            # FCM.soft_predict(self.pd_data)
+            # fcm_centers = FCM.centers
+
+            f, axes = plt.subplots(1,2, figsize=(11,5))
+            # self.pd_data.columns.get_loc(col1), self.pd_data.columns.get_loc(col2)
+            # axes[0].scatter(x=col1, y=col2, alpha=.1)
+            # axes[1].scatter(x=col1, y=col2, c=fcm_labels, alpha=.1)
+            print(fcm_labels)
+            print(self.pd_data.iloc[:,1].values)
+            print(self.pd_data[col1].iloc[:].values)
+            print(self.pd_data[col2].iloc[:].values)
+            axes[0].scatter(self.pd_data[col1].iloc[:].values, self.pd_data[col2].iloc[:].values, alpha=.1)
+            axes[1].scatter(self.pd_data[col1].iloc[:].values, self.pd_data[col2].iloc[:].values, c=fcm_labels, alpha=.1)
+            # pd_data.iloc[:].values
+            # axes[1].scatter(fcm_centers)
+            # sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
+            plt.show()
+
+            # sns.scatterplot(x=col1, y=col2, hue='Clusters', data=self.pd_data, palette='bright')
+            # sns.scatterplot(x=centroids[:, self.pd_data.columns.get_loc(col1)],
+            #                 y=centroids[:, self.pd_data.columns.get_loc(col2)],
+            #                 color='black', marker='s')
+
+
+    def save(self):
+        pad = {
+            'padx': 5,
+            'pady': 5
+        }
+        window = tk.Toplevel(self.master)
+        ttk.Label(window, text='Название модели:').grid(row=0, column=0,  **pad)
+        name_ent = ttk.Entry(window)
+        name_ent.grid(row=0, column=1, sticky=tk.W, **pad)
+        ttk.Label(window, text='Описание модели:').grid(row=1, column=0, **pad)
+        desc_text = tk.Text(window, width=30, height=5)
+        desc_text.grid(row=1, column=1, **pad)
+        ttk.Button(window, text='Сохранить',
+                   command=lambda: [save_model(self.entry, self.alg,
+                                               # self.accuracy,
+                                                                        name=name_ent.get(),
+                                                                        desc=desc_text.get("1.0", "end-1c")),
+                                    window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
+
 
