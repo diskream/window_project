@@ -704,12 +704,13 @@ class DecisionTreeModelInfo(tk.Tk):
     def plot_feature_importance(self, plot_size: tuple) -> None:
         feature_importance = self.clf.feature_importances_
         feature_names = self.x.columns
-        # Create a DataFrame using a Dictionary
+        # Создание датафрейма из словаря
         data = {'feature_names': feature_names, 'feature_importance': feature_importance}
         fi_df = pd.DataFrame(data)
-        # Sort the DataFrame in order decreasing feature importance
+        # Сортировка важности переменных по убыванию
         fi_df.sort_values(by=['feature_importance'], ascending=False, inplace=True)
         figure = Figure(figsize=plot_size, dpi=100)
+        figure.subplots_adjust(left=0.3)
         ax = figure.add_subplot(1, 1, 1)
         sns.barplot(y=fi_df['feature_names'], x=fi_df['feature_importance'], ax=ax).\
             set_title('Важность ключевых параметров')
@@ -721,12 +722,12 @@ class DecisionTreeModelInfo(tk.Tk):
         fpr, tpr, thresholds = roc_curve(self.y_test if self.is_splitted else self.y, y_predicted[:, 1])
         roc_auc = auc(fpr, tpr)
         figure = Figure(figsize=plot_size, dpi=100)
-        plot = figure.add_subplot(1, 1, 1)
-        plot.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-        plot.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plot.set_title('ROC-кривая')
-        plot.set_xlabel('False Positive Rate (FPR)')
-        plot.set_ylabel('True Positive Rate (TPR)')
+        ax = figure.add_subplot(1, 1, 1)
+        ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+        ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        ax.set_title('ROC-кривая')
+        ax.set_xlabel('False Positive Rate (FPR)')
+        ax.set_ylabel('True Positive Rate (TPR)')
         roc_graph = FigureCanvasTkAgg(figure, self.top_frm)
         roc_graph.get_tk_widget().pack(side=tk.LEFT)
 
