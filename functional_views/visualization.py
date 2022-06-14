@@ -61,7 +61,7 @@ class VisualisationView(tk.Tk):
 
         self.figure = Figure(figsize=self.figsize, dpi=self.dpi)
         self.ax = self.figure.add_subplot(1, 1, 1)
-        sns.set_theme()
+        # sns.set_theme()
         sns.set_style('whitegrid')
         sns.set_context(rc={"lines.linewidth": 1.7})
         sinplot(self)

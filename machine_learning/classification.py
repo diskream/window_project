@@ -135,7 +135,8 @@ class WorkWithModel(ttk.LabelFrame):
         ttk.Label(model_management, text='Изменение описания модели:').grid(row=0, column=2, columnspan=2, **pad)
         self.description_text = tk.Text(model_management, width=30, height=5)
         self.description_text.grid(row=1, column=2, columnspan=2, rowspan=6, **pad)
-        ttk.Button(model_management, text='Подтвердить', command=self.update_desc).grid(row=8, column=2, columnspan=2, **pad)
+        ttk.Button(model_management, text='Подтвердить', command=self.update_desc).grid(row=8, column=2, columnspan=2,
+                                                                                        **pad)
 
     def get_data_list(self):
         table = self.table_selection_cb.get()
@@ -229,6 +230,7 @@ class WorkWithModel(ttk.LabelFrame):
 
     def update_desc(self):
         pass
+
 
 class DecisionTreeFrame(tk.Frame):
     def __init__(self, parent, entry, pd_data):
@@ -439,7 +441,7 @@ class DecisionTreeFrame(tk.Frame):
             'pady': 5
         }
         window = tk.Toplevel(self.master)
-        ttk.Label(window, text='Название модели:').grid(row=0, column=0,  **pad)
+        ttk.Label(window, text='Название модели:').grid(row=0, column=0, **pad)
         name_ent = ttk.Entry(window)
         name_ent.grid(row=0, column=1, sticky=tk.W, **pad)
         ttk.Label(window, text='Описание модели:').grid(row=1, column=0, **pad)
@@ -447,8 +449,8 @@ class DecisionTreeFrame(tk.Frame):
         desc_text.grid(row=1, column=1, **pad)
         ttk.Button(window, text='Сохранить',
                    command=lambda: [save_model(self.entry, self.clf, self.accuracy,
-                                                                        name=name_ent.get(),
-                                                                        desc=desc_text.get("1.0", "end-1c")),
+                                               name=name_ent.get(),
+                                               desc=desc_text.get("1.0", "end-1c")),
                                     window.destroy()]).grid(row=2, column=0, columnspan=2, **pad)
 
 
@@ -712,7 +714,7 @@ class DecisionTreeModelInfo(tk.Tk):
         figure = Figure(figsize=plot_size, dpi=100)
         figure.subplots_adjust(left=0.3)
         ax = figure.add_subplot(1, 1, 1)
-        sns.barplot(y=fi_df['feature_names'], x=fi_df['feature_importance'], ax=ax).\
+        sns.barplot(y=fi_df['feature_names'], x=fi_df['feature_importance'], ax=ax). \
             set_title('Важность ключевых параметров')
         f_i_graph = FigureCanvasTkAgg(figure, self.top_frm)
         f_i_graph.get_tk_widget().pack(side=tk.LEFT)
@@ -739,7 +741,6 @@ class DecisionTreeModelInfo(tk.Tk):
         sns.heatmap(cm, ax=ax, annot=True).set_title('Матрица ошибок')
         cm = FigureCanvasTkAgg(figure, self.bottom_frm)
         cm.get_tk_widget().pack()
-
 
 
 class DecisionTreePlot(tk.Tk):
